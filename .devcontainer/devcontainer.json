@@ -1,0 +1,71 @@
+{
+  "name": "Node.js Dev Container",
+  // DockerfileでNode.jsイメージにLinux用サンドボックスの依存パッケージを追加します。
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  // 権限を制限したnodeユーザーで実行します。
+  "remoteUser": "node",
+  // Copilotのチャット履歴とツール実行記録を、コンテナ再作成後も保持します。
+  "mounts": [
+    "source=agent-session-history,target=/home/node/.vscode-server/data/User/workspaceStorage,type=volume"
+  ],
+  // Webアプリ開発でよく使うポートをホストへ転送します。
+  "forwardPorts": [3000],
+  "customizations": {
+    "vscode": {
+      // Copilot公式拡張と、Node.js開発向けの編集支援拡張をインストールします。
+      "extensions": [
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ],
+      "settings": {
+        // 新しいエージェントセッションを対話モード・手動承認で開始します。
+        "chat.defaultConfiguration": {
+          "mode": "interactive",
+          "approvals": "manual"
+        },
+        // Chatビューでも標準の手動承認を使います。
+        "chat.permissions.default": "default",
+        // 全体の自動承認を無効にし、ワークスペースの編集にも確認を求めます。
+        "chat.tools.global.autoApprove": false,
+        "chat.tools.edits.autoApprove": {
+          "**/*": false
+        },
+        // ターミナルツールの自動承認と、承認ルールによる自動実行を無効にします。
+        "chat.tools.eligibleForAutoApproval": {
+          "runInTerminal": false,
+          "sendToTerminal": false
+        },
+        "chat.tools.terminal.enableAutoApprove": false,
+        // URLへの要求や応答を自動承認しません。
+        "chat.tools.urls.autoApprove": {},
+        // エージェントのターミナルプロセスをローカルサンドボックス内で実行します。
+        "chat.agent.sandbox.enabled": "on",
+        // サンドボックス内からの外部通信とローカルネットワーク通信を遮断します。
+        "chat.agent.sandbox.network.allowNetwork": false,
+        "chat.agent.sandbox.network.allowLocalNetwork": false,
+        // 開発ツールの設定やキャッシュへの自動アクセスを禁止し、Node.js実行ファイルのある/usr/localだけ読み取り専用で許可します。
+        "chat.agent.sandbox.fileSystem.allowDevToolAccess": false,
+        "chat.agent.sandbox.fileSystem.userConfiguredPaths": {
+          "readonlyPaths": [
+            "/usr/local"
+          ]
+        },
+        // GitやGitHub CLIの認証情報をエージェントのコマンドに渡しません。
+        "chat.agent.sandbox.credentials.authenticategit": false,
+        "chat.agent.sandbox.credentials.authenticategh": false,
+        // サンドボックス外でのコマンド実行を許可しません。
+        "chat.agent.sandbox.allowUnsandboxedCommands": false,
+        // 管理対象のMCPサーバーと言語サーバーもサンドボックス内で実行します。
+        "chat.agent.sandbox.mcpServers": true,
+        "chat.agent.sandbox.lspServers": true,
+        // セッション履歴をGitHubへ同期せず、ローカルに保存します。
+        "chat.sessionSync.enabled": false
+      }
+    }
+  }
+}
