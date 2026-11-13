@@ -5,6 +5,10 @@
     "dockerfile": "Dockerfile",
     "context": ".."
   },
+  // Docker標準seccompを維持し、Bubblewrapに必要な名前空間操作だけ追加許可します。
+  "runArgs": [
+    "--security-opt=seccomp=${localWorkspaceFolder}/.devcontainer/bubblewrap-seccomp.json"
+  ],
   // 権限を制限したnodeユーザーで実行します。
   "remoteUser": "node",
   // Copilotのチャット履歴とツール実行記録を、コンテナ再作成後も保持します。
