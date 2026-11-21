@@ -6,6 +6,20 @@
       "type": "shell",
       "command": "/opt/secure-template/secure-run",
       "args": ["npm", "run", "typecheck"],
+      "windows": {
+        "command": "powershell.exe",
+        "args": [
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          "${workspaceFolder}\\scripts\\local-secure-run.ps1",
+          "--offline",
+          "npm",
+          "run",
+          "typecheck"
+        ]
+      },
       "group": "build",
       "problemMatcher": "$tsc"
     },
@@ -14,6 +28,19 @@
       "type": "shell",
       "command": "/opt/secure-template/secure-run",
       "args": ["npm", "test"],
+      "windows": {
+        "command": "powershell.exe",
+        "args": [
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          "${workspaceFolder}\\scripts\\local-secure-run.ps1",
+          "--offline",
+          "npm",
+          "test"
+        ]
+      },
       "group": "test",
       "problemMatcher": []
     },
@@ -22,6 +49,20 @@
       "type": "shell",
       "command": "/opt/secure-template/secure-run",
       "args": ["npm", "run", "build"],
+      "windows": {
+        "command": "powershell.exe",
+        "args": [
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          "${workspaceFolder}\\scripts\\local-secure-run.ps1",
+          "--offline",
+          "npm",
+          "run",
+          "build"
+        ]
+      },
       "group": "build",
       "problemMatcher": []
     },
@@ -30,6 +71,19 @@
       "type": "shell",
       "command": "/opt/secure-template/secure-run",
       "args": ["npm", "run", "dev"],
+      "windows": {
+        "command": "powershell.exe",
+        "args": [
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          "${workspaceFolder}\\scripts\\local-secure-run.ps1",
+          "npm",
+          "run",
+          "dev"
+        ]
+      },
       "isBackground": true,
       "problemMatcher": {
         "owner": "custom",

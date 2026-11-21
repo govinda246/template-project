@@ -149,6 +149,33 @@ npm run build
 
 ゲームは<http://127.0.0.1:3000>で確認できます。ホストの3000番はegress proxyの127.0.0.1 bindへだけ公開され、そこから`sandbox`ネットワーク内のViteへ転送されます。ゲーム本体は外部通信しません。
 
+## Dockerを使わないWindowsローカル実行
+
+VS Codeをコンテナから開いていないWindowsでも、最低限のローカル隔離としてWSL 2とBubblewrapを使用します。`.vscode/settings.json`によりAgentの手動承認を強制し、Windowsの初期ターミナルは`Secure local sandbox`へ固定されます。typecheck、test、buildタスクはnetwork namespaceを切ったoffline実行です。
+
+必要条件:
+
+- WSL 2
+- WSL内のBubblewrap
+- WSL内のNode.js `22.16.0`
+- WSL内のnpm `10.9.2`
+
+`node`や`npm`がWSL内にない場合、タスクは通常のPowerShellへフォールバックせず停止します。初回導入後は次でローカル確認できます。
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local-secure-run.ps1 --offline npm run typecheck
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local-secure-run.ps1 --offline npm test
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local-secure-run.ps1 --offline npm run build
+```
+
+ゲームサーバーはブラウザー表示のためネットワークを切れず、WSL内で隔離されたまま次を実行します。
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local-secure-run.ps1 npm run dev
+```
+
+このローカル構成はプロセス・PID・IPC・UTS・HOME・重要ファイルを分離しますが、Windows向けegress allowlistは構成しません。通常のdev server経路や許可していないネットワークを完全に防ぐ必要がある場合はDev Containerを使用してください。`--offline`のtypecheck/test/buildが、コマンド内容の変更を伴わない最小かつ強い選択です。
+
 ## テスト
 
 ローカルでは次を順に実行します。
