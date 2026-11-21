@@ -2,6 +2,8 @@
 
 TypeScript、Vite、Phaser 3 を使う最小2Dブラウザーゲーム基盤です。Dev Containerは既定で外部ネットワークから隔離され、必要なHTTPS通信だけをallowlist付きCONNECTプロキシへ渡します。開発コマンドはBubblewrap内で実行します。
 
+コンテナ構成の初心者向けガイドは [GitHub Pages](https://govinda246.github.io/template-project/) で確認できます。`docs/index.html` を更新すると、GitHub Actionsで自動公開されます。
+
 ## 前提
 
 - Docker Desktop または Docker Engine + Compose v2
