@@ -1,30 +1,6 @@
 {
-  // Dev Container外でもAgentの自動承認を有効にしない。
-  "chat.defaultConfiguration": {
-    "mode": "interactive",
-    "approvals": "manual"
-  },
-  "chat.permissions.default": "default",
-  "chat.tools.global.autoApprove": false,
-  "chat.tools.edits.autoApprove": {
-    "**/*": false
-  },
-  "chat.tools.eligibleForAutoApproval": {
-    "runInTerminal": false,
-    "sendToTerminal": false
-  },
-  "chat.tools.terminal.enableAutoApprove": false,
-  "chat.tools.terminal.autoApprove": {},
-  "chat.tools.urls.autoApprove": {},
-  "chat.agent.sandbox.enabled": "on",
-  "chat.agent.sandbox.network.allowNetwork": false,
-  "chat.agent.sandbox.network.allowLocalNetwork": false,
-  "chat.agent.sandbox.fileSystem.allowDevToolAccess": false,
-  "chat.agent.sandbox.credentials.authenticategit": false,
-  "chat.agent.sandbox.credentials.authenticategh": false,
-  "chat.agent.sandbox.allowUnsandboxedCommands": false,
-  "chat.sessionSync.enabled": false,
-  // Windowsの初期ターミナルも、WSL2 + Bubblewrapの入口へ固定する。
+  // このworkspace設定はWindowsローカル実行専用。
+  // Dev Container側のAgent制御は.devcontainer/devcontainer.jsonが担当する。
   "terminal.integrated.defaultProfile.windows": "Secure local sandbox",
   "terminal.integrated.profiles.windows": {
     "Secure local sandbox": {

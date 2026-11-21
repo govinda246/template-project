@@ -151,7 +151,9 @@ npm run build
 
 ## Dockerを使わないWindowsローカル実行
 
-VS Codeをコンテナから開いていないWindowsでも、最低限のローカル隔離としてWSL 2とBubblewrapを使用します。`.vscode/settings.json`によりAgentの手動承認を強制し、Windowsの初期ターミナルは`Secure local sandbox`へ固定されます。typecheck、test、buildタスクはnetwork namespaceを切ったoffline実行です。
+VS Codeをコンテナから開いていないWindowsでも、最低限のローカル隔離としてWSL 2とBubblewrapを使用します。`.vscode/settings.json`はWindowsの初期ターミナルを`Secure local sandbox`へ固定し、typecheck、test、buildタスクはnetwork namespaceを切ったoffline実行です。Agentの手動承認はVS Codeユーザー設定へ置くことを推奨します。
+
+`.vscode/settings.json`はWindowsローカル専用のterminal profileだけを管理します。Dev Container内のAgent承認・network・credentials設定は`.devcontainer/devcontainer.json`が管理します。Windowsローカルの全プロジェクト共通でAgent保護を効かせる場合は、VS Codeのユーザー設定へ手動承認・sandbox設定を統合します。推奨テンプレートはGit管理対象外の`tmp/vscode-user-settings-recommended.jsonc`です。
 
 必要条件:
 
