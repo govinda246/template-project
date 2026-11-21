@@ -28,6 +28,8 @@ jobs:
       - name: Checkout
         # 供給網リスクを減らすため、利用Actionはcommit SHAへ固定する。
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          submodules: recursive
       - name: Configure Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
         with:

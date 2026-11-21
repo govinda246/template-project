@@ -7,6 +7,7 @@
   "workspaceFolder": "/workspaces/github_agent_test",
   "remoteUser": "node",
   "shutdownAction": "stopCompose",
+  "postCreateCommand": "node scripts/sync-shared-agent.mjs",
   "forwardPorts": [3000],
   "customizations": {
     "vscode": {

@@ -38,6 +38,10 @@ if [[ -z "$project_root" ]]; then
   project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 fi
 project_root="$(cd -- "$project_root" && pwd)"
+path_prefix=/usr/local/share/npm-global/bin
+if [[ -d "$project_root/.github/shared/bin" ]]; then
+  path_prefix="$project_root/.github/shared/bin:$path_prefix"
+fi
 # HOMEを空にし、npm等が必要とするcacheだけを明示的な一時領域へbindする。
 home_dir="${TMPDIR:-/tmp}/secure-home-${UID}"
 cache_dir="$home_dir/.cache"
@@ -84,7 +88,7 @@ args+=(
   --setenv USER node
   --setenv LOGNAME node
   --setenv SECURE_PROJECT_ROOT "$project_root"
-  --setenv PATH /usr/local/share/npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  --setenv PATH "$path_prefix:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
   --setenv SHELL /bin/bash
   --setenv LANG C.UTF-8
   # 通常の外向き通信はallowlist付きegress proxyへ向ける。

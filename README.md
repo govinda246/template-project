@@ -156,6 +156,101 @@ npm run build
 
 ゲームは<http://127.0.0.1:3000>で確認できます。ホストの3000番はegress proxyの127.0.0.1 bindへだけ公開され、そこから`sandbox`ネットワーク内のViteへ転送されます。ゲーム本体は外部通信しません。
 
+## このテンプレートから新プロジェクトを作成
+
+推奨する開始手順は次の順です。
+
+1. テンプレートを新しいローカルフォルダーへクローンします。
+2. クローン元テンプレートのGit履歴とremoteを外します。
+3. 新しいGit履歴と `origin` を作成します。
+4. Dev Containerで`Initialize project`タスクを実行します。
+5. テスト後、初期状態をコミットします。
+6. 必要なら共有Agentサブモジュールを追加して別コミットします。
+7. 新リポジトリへpushします。
+
+PowerShellで2を行う例:
+
+```powershell
+Remove-Item -Recurse -Force .git
+```
+
+新しいGit履歴とremoteを初期化より先に作成します。
+
+```powershell
+git init -b main
+git remote add origin https://github.com/OWNER/my-project.git
+```
+
+VS Codeの`Tasks: Run Task`から`Initialize project`を選び、プロジェクト名だけを
+入力します。`.git`がまだ存在しない場合でも初期化できます。`git init`直後の未追跡ファイルは
+許可し、初期コミットを持つリポジトリではworktreeがcleanであることを確認します。
+`origin`が設定済みなら、GitHubリポジトリURLを自動検出します。
+
+同じ処理を端末から実行する場合:
+
+```sh
+npm run init-project -- --name my-project
+```
+
+初期化後は検証して初回コミットを作成します。
+
+```sh
+npm test
+npm run build
+git add .
+git commit -m "Initialize project"
+```
+
+初期化では、パッケージ名、Compose名、Dev Container表示名、workspace path、
+画面タイトルとゲーム上の表示名を変更します。Phaserのサンプルロジック、
+テンプレート用`docs/`、GitHub Pages workflowも削除します。Git管理を開始済みの
+場合はworktreeがcleanであることを確認します。初期化後はdiffをレビューし、
+テスト・build後に最初のコミットを作ります。
+
+## 共有Agentサブモジュール
+
+共有Agentリポジトリの指定は、プロジェクト初期化ツールには含めていません。
+プロジェクト名だけで初期化を完了させ、Agentは次の別工程で追加します。
+
+共有Agentリポジトリは次の契約を持つ必要があります。
+
+```text
+copilot-instructions.md
+hooks.yml
+agents/
+skills/
+bin/
+```
+
+VS Codeの`Setup shared Agent`タスクへ共有リポジトリURLを入力するか、次を
+実行します。実行前にプロジェクト初期化の変更をコミットし、worktreeをcleanに
+してください。
+
+```sh
+npm run setup-shared-agent -- --url https://github.com/OWNER/shared-agent.git
+```
+
+ブランチを明示して最初の参照点を選ぶ場合は`--branch`を追加します。
+Gitサブモジュールは`.github/shared`へ追加され、Gitが参照commitを固定します。
+共有リポジトリの指示は`.github/copilot-instructions.local.md`と結合されて
+`.github/copilot-instructions.md`を生成し、Agent定義とSkillもCopilotが検出する
+`.github/agents`、`.github/skills`へ展開します。`bin/`はセキュアランナーの
+PATHへ追加されます。
+
+通常の更新では、次の順でサブモジュールのcommitを明示的にレビューします。
+
+```sh
+git -C .github/shared fetch
+git -C .github/shared checkout <reviewed-commit>
+npm run sync-shared-agent
+git add .github/shared
+git commit
+```
+
+共有リポジトリは固定commitのコードとして扱い、URL、差分、実行ファイルを
+確認せずに更新しないでください。Dev Container作成時とCIでは同期処理が実行され、
+生成ファイルはGit管理外です。
+
 ## Dockerを使わないWindowsローカル実行
 
 VS Codeをコンテナから開いていないWindowsでも、最低限のローカル隔離としてWSL 2とBubblewrapを使用します。`.vscode/settings.json`はWindowsの初期ターミナルを`Secure local sandbox`へ固定し、typecheck、test、buildタスクはnetwork namespaceを切ったoffline実行です。Agentの手動承認はVS Codeユーザー設定へ置くことを推奨します。

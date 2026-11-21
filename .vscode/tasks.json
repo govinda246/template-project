@@ -2,6 +2,35 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Initialize project",
+      "type": "process",
+      "command": "node",
+      "args": [
+        "scripts/init-project.mjs",
+        "--name",
+        "${input:projectName}"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Setup shared Agent",
+      "type": "process",
+      "command": "node",
+      "args": [
+        "scripts/setup-shared-agent.mjs",
+        "--url",
+        "${input:sharedAgentRepository}"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Sync shared Agent",
+      "type": "process",
+      "command": "node",
+      "args": ["scripts/sync-shared-agent.mjs"],
+      "problemMatcher": []
+    },
+    {
       "label": "secure: typecheck",
       "type": "shell",
       "command": "/opt/secure-template/secure-run",
@@ -98,6 +127,18 @@
           "endsPattern": "Local:"
         }
       }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "projectName",
+      "type": "promptString",
+      "description": "New project name (lowercase kebab-case)"
+    },
+    {
+      "id": "sharedAgentRepository",
+      "type": "promptString",
+      "description": "Shared Agent repository URL"
     }
   ]
 }

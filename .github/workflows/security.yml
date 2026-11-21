@@ -23,6 +23,10 @@ jobs:
       - name: Checkout
         # タグではなくcommit SHA固定でAction内容の追従変更を防ぐ。
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          submodules: recursive
+      - name: Synchronize shared Agent files
+        run: node scripts/sync-shared-agent.mjs
       - name: Install dependencies without lifecycle scripts
         # 取得パッケージのinstall scriptは先に実行せず、lockfileから導入する。
         run: npm ci --ignore-scripts
@@ -34,6 +38,8 @@ jobs:
         run: npm audit --audit-level=high
       - name: Run tests
         run: npm test
+      - name: Run bootstrap tests
+        run: node --test scripts/init-project.test.mjs scripts/setup-shared-agent.test.mjs scripts/sync-shared-agent.test.mjs
       - name: Run proxy security tests
         run: node --test .devcontainer/egress-proxy.test.mjs
       - name: Verify resolved Compose security controls

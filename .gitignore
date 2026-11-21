@@ -4,3 +4,6 @@ dist/
 coverage/
 *.log
 .DS_Store
+.github/copilot-instructions.md
+.github/agents/shared-*
+.github/skills/shared-*

@@ -17,6 +17,10 @@ if [[ ! -d "$project_root" ]]; then
   exit 66
 fi
 project_root="$(cd -- "$project_root" && pwd -P)"
+path_prefix=/usr/local/bin
+if [[ -d "$project_root/.github/shared/bin" ]]; then
+  path_prefix="/workspace/.github/shared/bin:$path_prefix"
+fi
 
 network_args=(--unshare-net)
 if [[ ${1:-} == "--offline" ]]; then
@@ -97,7 +101,7 @@ args+=(
   --setenv USER "$USER"
   --setenv LOGNAME "$USER"
   --setenv SECURE_PROJECT_ROOT /workspace
-  --setenv PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  --setenv PATH "$path_prefix:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin"
   --setenv SHELL /bin/bash
   --setenv LANG C.UTF-8
   --setenv NO_PROXY localhost,127.0.0.1
