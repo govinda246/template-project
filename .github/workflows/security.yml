@@ -27,7 +27,18 @@ jobs:
         # 取得パッケージのinstall scriptは先に実行せず、lockfileから導入する。
         run: npm ci --ignore-scripts
       - name: Audit production dependencies
-        # High以上の本番脆弱性を検知。dev依存は対象外なので別途確認する。
+        # 本番依存と報告面を分離して確認する。
         run: npm audit --omit=dev --audit-level=high
+      - name: Audit all dependencies
+        # Vite/Vitest等の開発時実行コードもHigh以上を許可しない。
+        run: npm audit --audit-level=high
+      - name: Run tests
+        run: npm test
+      - name: Run proxy security tests
+        run: node --test .devcontainer/egress-proxy.test.mjs
+      - name: Verify resolved Compose security controls
+        run: node scripts/verify-compose-security.mjs
+      - name: Build
+        run: npm run build
       - name: Verify lockfile
         run: npm ci --ignore-scripts

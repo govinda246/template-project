@@ -2,21 +2,33 @@
 set -euo pipefail
 
 # This runner is for WSL-based local development without Docker.
-# It provides process/filesystem isolation, but normal commands still share WSL networking.
+# Network access is denied by default; online access must be explicitly requested.
 
-if [[ $# -eq 0 ]]; then
-  echo "usage: local-secure-run.sh [--offline] COMMAND [ARG...]" >&2
+if [[ $# -lt 2 || ${1:-} != "--project-path" ]]; then
+  echo "usage: local-secure-run.sh --project-path PATH [--online] COMMAND [ARG...]" >&2
   exit 64
 fi
 
-network_args=()
+project_root="$2"
+shift 2
+
+if [[ ! -d "$project_root" ]]; then
+  echo "local-secure-run: project path does not exist: $project_root" >&2
+  exit 66
+fi
+project_root="$(cd -- "$project_root" && pwd -P)"
+
+network_args=(--unshare-net)
 if [[ ${1:-} == "--offline" ]]; then
-  network_args=(--unshare-net)
+  shift
+elif [[ ${1:-} == "--online" ]]; then
+  network_args=()
+  echo "local-secure-run: WARNING: network access is enabled without an egress allowlist" >&2
   shift
 fi
 
 if [[ $# -eq 0 ]]; then
-  echo "local-secure-run: command is required after --offline" >&2
+  echo "local-secure-run: command is required" >&2
   exit 64
 fi
 
@@ -41,7 +53,6 @@ if [[ "$(node --version)" != "$expected_node" || "$(npm --version)" != "$expecte
   exit 65
 fi
 
-project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 home_dir="${TMPDIR:-/tmp}/local-secure-home-${UID}"
 cache_dir="$home_dir/.cache"
 mkdir -p "$home_dir" "$cache_dir"

@@ -6,6 +6,12 @@ import { fileURLToPath } from 'node:url';
 const DEFAULT_ALLOWLIST_PATH = fileURLToPath(
   new URL('./egress-allowlist.txt', import.meta.url),
 );
+const FRONTEND_HOSTS = new Set([
+  '127.0.0.1',
+  '[::1]',
+  'devcontainer',
+  'localhost',
+]);
 
 export function parseAllowlist(contents) {
   return new Set(
@@ -33,6 +39,28 @@ export function parseConnectTarget(request) {
 export function isAllowed(target, allowedHosts) {
   // hostnameは完全一致、portは443だけ。サブドメインや平文HTTPを暗黙許可しない。
   return target.port === 443 && allowedHosts.has(target.hostname);
+}
+
+export function isAllowedFrontendHost(value) {
+  if (typeof value !== 'string' || value.length > 255) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(`http://${value}`);
+    if (
+      parsed.username ||
+      parsed.password ||
+      parsed.pathname !== '/' ||
+      parsed.search ||
+      parsed.hash
+    ) {
+      return false;
+    }
+    return FRONTEND_HOSTS.has(parsed.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
 }
 
 export function createEgressProxy(allowedHosts, logger = console) {
@@ -92,13 +120,19 @@ export function createEgressProxy(allowedHosts, logger = console) {
 export function createFrontendProxy(hostname, port) {
   // ブラウザーからの3000番をsandbox内Viteへ中継する。外部公開先とは別の入口。
   const server = createServer((request, response) => {
+    if (!isAllowedFrontendHost(request.headers.host)) {
+      response.writeHead(421, { connection: 'close' });
+      response.end('Misdirected Request\n');
+      return;
+    }
+
     const upstream = httpRequest(
       {
         hostname,
         port,
         method: request.method,
         path: request.url,
-        headers: { ...request.headers, host: `${hostname}:${port}` },
+        headers: request.headers,
       },
       (upstreamResponse) => {
         response.writeHead(
@@ -119,9 +153,14 @@ export function createFrontendProxy(hostname, port) {
   });
 
   server.on('upgrade', (request, clientSocket, head) => {
+    if (!isAllowedFrontendHost(request.headers.host)) {
+      clientSocket.end('HTTP/1.1 421 Misdirected Request\r\nConnection: close\r\n\r\n');
+      return;
+    }
+
     const upstream = connect(port, hostname);
     upstream.once('connect', () => {
-      const headers = { ...request.headers, host: `${hostname}:${port}` };
+      const headers = request.headers;
       upstream.write(
         `${request.method} ${request.url} HTTP/${request.httpVersion}\r\n`,
       );

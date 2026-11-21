@@ -6,11 +6,23 @@ import test from 'node:test';
 import {
   createEgressProxy,
   createFrontendProxy,
+  isAllowedFrontendHost,
   isAllowed,
   parseAllowlist,
   parseConnectTarget,
 } from './egress-proxy.mjs';
 import { connect } from 'node:net';
+import { request as httpRequest } from 'node:http';
+
+test('only accepts local frontend hosts', () => {
+  assert.equal(isAllowedFrontendHost('localhost:3000'), true);
+  assert.equal(isAllowedFrontendHost('127.0.0.1:3000'), true);
+  assert.equal(isAllowedFrontendHost('[::1]:3000'), true);
+  assert.equal(isAllowedFrontendHost('devcontainer:3000'), true);
+  assert.equal(isAllowedFrontendHost('attacker.example:3000'), false);
+  assert.equal(isAllowedFrontendHost('localhost.attacker.example'), false);
+  assert.equal(isAllowedFrontendHost(undefined), false);
+});
 
 test('parses comments and normalizes exact hostnames', () => {
   assert.deepEqual(
@@ -112,14 +124,70 @@ test('forwards frontend requests to the selected internal host', async () => {
   try {
     const frontendAddress = frontend.address();
     assert.ok(frontendAddress && typeof frontendAddress === 'object');
-    const response = await fetch(
-      `http://127.0.0.1:${frontendAddress.port}/game?mode=test`,
-    );
-    assert.equal(response.status, 200);
+    const response = await new Promise((resolve, reject) => {
+      const request = httpRequest(
+        {
+          hostname: '127.0.0.1',
+          port: frontendAddress.port,
+          path: '/game?mode=test',
+          headers: { host: `localhost:${frontendAddress.port}` },
+        },
+        resolve,
+      );
+      request.on('error', reject);
+      request.end();
+    });
+    let responseBody = '';
+    for await (const chunk of response) {
+      responseBody += chunk;
+    }
+    assert.equal(response.statusCode, 200);
     assert.equal(
-      await response.text(),
-      `127.0.0.1:${upstreamAddress.port}:/game?mode=test`,
+      responseBody,
+      `localhost:${frontendAddress.port}:/game?mode=test`,
     );
+  } finally {
+    frontend.close();
+    upstream.close();
+    await Promise.all([once(frontend, 'close'), once(upstream, 'close')]);
+  }
+});
+
+test('rejects DNS rebinding hosts before forwarding', async () => {
+  let forwarded = false;
+  const upstream = createHttpServer((_request, response) => {
+    forwarded = true;
+    response.end('unexpected');
+  });
+  upstream.listen(0, '127.0.0.1');
+  await once(upstream, 'listening');
+
+  const upstreamAddress = upstream.address();
+  assert.ok(upstreamAddress && typeof upstreamAddress === 'object');
+
+  const frontend = createFrontendProxy('127.0.0.1', upstreamAddress.port);
+  frontend.listen(0, '127.0.0.1');
+  await once(frontend, 'listening');
+
+  try {
+    const frontendAddress = frontend.address();
+    assert.ok(frontendAddress && typeof frontendAddress === 'object');
+    const response = await new Promise((resolve, reject) => {
+      const request = httpRequest(
+        {
+          hostname: '127.0.0.1',
+          port: frontendAddress.port,
+          headers: { host: 'attacker.example' },
+        },
+        resolve,
+      );
+      request.on('error', reject);
+      request.end();
+    });
+    response.resume();
+    await once(response, 'end');
+    assert.equal(response.statusCode, 421);
+    assert.equal(forwarded, false);
   } finally {
     frontend.close();
     upstream.close();

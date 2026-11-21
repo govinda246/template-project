@@ -63,7 +63,7 @@ devコンテナから直接インターネットへ出るdefault routeはあり�
 - `$HOME`を空のtmpfsへ置換
 - ホスト資格情報やDocker socketをマウントしない
 - `copilot`、`gh copilot`、`npx`/`npm exec`によるGitHub Copilot CLI起動、`docker`、`sudo`、`mount`、`nsenter`などの実行を拒否
-- `--offline`指定時はネットワークnamespaceも分離
+- ローカルランナーではネットワークnamespaceを既定で分離し、`--online`指定時だけ共有
 
 初期ターミナルはセキュアシェルです。通常ターミナルの代わりに入力するコマンドはすでにBubblewrap内です。明示的に単発実行する場合は次の形を使います。
 
@@ -160,7 +160,7 @@ npm run build
 
 VS Codeをコンテナから開いていないWindowsでも、最低限のローカル隔離としてWSL 2とBubblewrapを使用します。`.vscode/settings.json`はWindowsの初期ターミナルを`Secure local sandbox`へ固定し、typecheck、test、buildタスクはnetwork namespaceを切ったoffline実行です。Agentの手動承認はVS Codeユーザー設定へ置くことを推奨します。
 
-`.vscode/settings.json`はWindowsローカル専用のterminal profileだけを管理します。Dev Container内のAgent承認・network・credentials設定は`.devcontainer/devcontainer.json`が管理します。Windowsローカルの全プロジェクト共通でAgent保護を効かせる場合は、VS Codeのユーザー設定へ手動承認・sandbox設定を統合します。推奨テンプレートはGit管理対象外の`tmp/vscode-user-settings-recommended.jsonc`です。
+`.vscode/settings.json`はWindowsローカル専用のterminal profileだけを管理します。Dev Container内のAgent承認・network・credentials設定は`.devcontainer/devcontainer.json`が管理します。Windowsローカルの全プロジェクト共通でAgent保護を効かせる場合は、VS Codeのユーザー設定へ手動承認・sandbox設定を統合します。推奨テンプレートはGit管理対象外の`tmp/vscode-user-settings-recommended.jsonc`です。ローカルランナーは省略時にofflineとなり、`--online`を明示したコマンドだけがWSLネットワークを共有します。
 
 必要条件:
 
@@ -169,21 +169,27 @@ VS Codeをコンテナから開いていないWindowsでも、最低限のロー
 - WSL内のNode.js `22.16.0`
 - WSL内のnpm `10.9.2`
 
-`node`や`npm`がWSL内にない場合、タスクは通常のPowerShellへフォールバックせず停止します。初回導入後は次でローカル確認できます。
+`node`や`npm`がWSL内にない場合、タスクは通常のPowerShellへフォールバックせず停止します。初回に、レビュー済みのランナーをワークスペース外のユーザー領域へ固定します。VS Codeはワークスペース内で変更可能なランナーを直接実行しません。次のコピー後に`$env:LOCALAPPDATA\SecureTemplate`内の3ファイルを確認してください。Git更新後は差分をレビューして、このコピーを手動で更新します。
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local-secure-run.ps1 --offline npm run typecheck
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local-secure-run.ps1 --offline npm test
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local-secure-run.ps1 --offline npm run build
+$trusted = Join-Path $env:LOCALAPPDATA "SecureTemplate"
+New-Item -ItemType Directory -Force $trusted | Out-Null
+Get-Content scripts\local-secure-run.ps1, scripts\local-secure-run.sh, scripts\local-secure-shell.ps1
+Copy-Item scripts\local-secure-run.ps1, scripts\local-secure-run.sh, scripts\local-secure-shell.ps1 $trusted
 ```
 
-ゲームサーバーはブラウザー表示のためネットワークを切れず、WSL内で隔離されたまま次を実行します。
+初回導入後は次でローカル確認できます。タスクも同じ固定ランナーを使用します。
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local-secure-run.ps1 npm run dev
+$runner = Join-Path $env:LOCALAPPDATA "SecureTemplate\local-secure-run.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File $runner --project-path $PWD --offline npm run typecheck
+powershell -NoProfile -ExecutionPolicy Bypass -File $runner --project-path $PWD --offline npm test
+powershell -NoProfile -ExecutionPolicy Bypass -File $runner --project-path $PWD --offline npm run build
 ```
 
-このローカル構成はプロセス・PID・IPC・UTS・HOME・重要ファイルを分離しますが、Windows向けegress allowlistは構成しません。通常のdev server経路や許可していないネットワークを完全に防ぐ必要がある場合はDev Containerを使用してください。`--offline`のtypecheck/test/buildが、コマンド内容の変更を伴わない最小かつ強い選択です。
+ゲームサーバーはWebSocketやブラウザー配信を含むため、Windowsローカルのoffline namespaceでは直接公開できません。ローカルランナーに`--online`を明示すればネットワーク共有は可能ですが、egress allowlistがないため通常経路として提供しません。`npm run dev`はDev Container内で実行し、loopbackのフロントエンドプロキシを使用してください。
+
+コピーした固定ランナーはワークスペース変更の影響を受けませんが、ユーザー権限で書き込み可能なため、既に侵害されたWindowsアカウントからの防御は保証しません。コピー前に内容をレビューし、ワークスペース更新時は信頼した差分だけを再コピーしてください。このローカル構成はプロセス・PID・IPC・UTS・HOME・重要ファイルを分離し、ネットワークも既定で分離します。`--online`はWindows向けegress allowlistなしでWSLネットワークを共有するため、通常の開発ではDev Containerを使用してください。typecheck/test/buildはofflineのまま実行できます。
 
 ## テスト
 
@@ -195,11 +201,12 @@ npm ci --ignore-scripts
 npm run typecheck
 npm test
 node --test .devcontainer/egress-proxy.test.mjs
+node scripts/verify-compose-security.mjs
 npm run build
 bash scripts/verify-security.sh
 ```
 
-`verify-security.sh`はコンテナ内のBubblewrap実効挙動を検査するため、Dev Container内でのみ実行してください。
+`verify-compose-security.mjs`はホストまたはCIでDocker Composeの解決後設定を検査します。Dev Container内にDocker socketを公開していないため、Dev Container内では実行できません。`verify-security.sh`はコンテナ内のBubblewrap実効挙動を検査するため、Dev Container内でのみ実行してください。
 
 ## バージョン固定
 

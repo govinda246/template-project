@@ -13,7 +13,9 @@
           "-ExecutionPolicy",
           "Bypass",
           "-File",
-          "${workspaceFolder}\\scripts\\local-secure-run.ps1",
+          "${env:LOCALAPPDATA}\\SecureTemplate\\local-secure-run.ps1",
+          "--project-path",
+          "${workspaceFolder}",
           "--offline",
           "npm",
           "run",
@@ -35,7 +37,9 @@
           "-ExecutionPolicy",
           "Bypass",
           "-File",
-          "${workspaceFolder}\\scripts\\local-secure-run.ps1",
+          "${env:LOCALAPPDATA}\\SecureTemplate\\local-secure-run.ps1",
+          "--project-path",
+          "${workspaceFolder}",
           "--offline",
           "npm",
           "test"
@@ -56,7 +60,9 @@
           "-ExecutionPolicy",
           "Bypass",
           "-File",
-          "${workspaceFolder}\\scripts\\local-secure-run.ps1",
+          "${env:LOCALAPPDATA}\\SecureTemplate\\local-secure-run.ps1",
+          "--project-path",
+          "${workspaceFolder}",
           "--offline",
           "npm",
           "run",
@@ -67,7 +73,7 @@
       "problemMatcher": []
     },
     {
-      "label": "secure: dev server",
+      "label": "dev server (Dev Container only)",
       "type": "shell",
       "command": "/opt/secure-template/secure-run",
       "args": ["npm", "run", "dev"],
@@ -75,13 +81,8 @@
         "command": "powershell.exe",
         "args": [
           "-NoProfile",
-          "-ExecutionPolicy",
-          "Bypass",
-          "-File",
-          "${workspaceFolder}\\scripts\\local-secure-run.ps1",
-          "npm",
-          "run",
-          "dev"
+          "-Command",
+          "Write-Error 'The dev server must run in the Dev Container so egress remains allowlisted.'; exit 1"
         ]
       },
       "isBackground": true,

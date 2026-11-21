@@ -10,7 +10,9 @@
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        "${workspaceFolder}\\scripts\\local-secure-shell.ps1"
+        "${env:LOCALAPPDATA}\\SecureTemplate\\local-secure-shell.ps1",
+        "-ProjectPath",
+        "${workspaceFolder}"
       ]
     }
   },
