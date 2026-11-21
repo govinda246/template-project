@@ -13,5 +13,9 @@
         "${workspaceFolder}\\scripts\\local-secure-shell.ps1"
       ]
     }
+  },
+  "chat.defaultConfiguration": {
+    "mode": "interactive",
+    "approvals": "manual"
   }
 }
