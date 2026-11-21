@@ -10,6 +10,7 @@ import {
   parseAllowlist,
   parseConnectTarget,
 } from './egress-proxy.mjs';
+import { connect } from 'node:net';
 
 test('parses comments and normalizes exact hostnames', () => {
   assert.deepEqual(
@@ -61,6 +62,35 @@ test('rejects unsupported methods and non-HTTPS ports', async () => {
     proxy.close();
     upstream.close();
     await Promise.all([once(proxy, 'close'), once(upstream, 'close')]);
+  }
+});
+
+test('logs denied CONNECT destinations', async () => {
+  const warnings = [];
+  const proxy = createEgressProxy(new Set(['github.com']), {
+    warn(message) {
+      warnings.push(message);
+    },
+    error() {},
+  });
+  proxy.listen(0, '127.0.0.1');
+  await once(proxy, 'listening');
+
+  try {
+    const proxyAddress = proxy.address();
+    assert.ok(proxyAddress && typeof proxyAddress === 'object');
+
+    const client = connect(proxyAddress.port, '127.0.0.1');
+    client.write('CONNECT api.example.com:443 HTTP/1.1\r\nHost: api.example.com\r\n\r\n');
+    const response = await once(client, 'data');
+
+    assert.match(response[0].toString(), /^HTTP\/1\.1 403 Forbidden/u);
+    assert.deepEqual(warnings, [
+      'egress-proxy: 403 denied CONNECT api.example.com:443',
+    ]);
+  } finally {
+    proxy.close();
+    await once(proxy, 'close');
   }
 });
 

@@ -12,7 +12,9 @@
     "vscode": {
       "extensions": [
         "dbaeumer.vscode-eslint@3.0.34",
-        "esbenp.prettier-vscode@12.4.0"
+        "esbenp.prettier-vscode@12.4.0",
+        "GitHub.copilot",
+        "GitHub.copilot-chat"
       ],
       "settings": {
         // Agent操作は全て手動承認。端末・編集・URLへ暗黙に実行権限を与えない。

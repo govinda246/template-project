@@ -35,7 +35,7 @@ export function isAllowed(target, allowedHosts) {
   return target.port === 443 && allowedHosts.has(target.hostname);
 }
 
-export function createEgressProxy(allowedHosts) {
+export function createEgressProxy(allowedHosts, logger = console) {
   const server = createServer((_request, response) => {
     // 通常HTTPではforward proxyとして働かず、HTTPS CONNECTだけを受け付ける。
     response.writeHead(405, { connection: 'close' });
@@ -45,6 +45,10 @@ export function createEgressProxy(allowedHosts) {
   server.on('connect', (request, clientSocket, head) => {
     const target = parseConnectTarget(request);
     if (!target || !isAllowed(target, allowedHosts)) {
+      const destination = target
+        ? `${target.hostname}:${target.port}`
+        : request.url ?? '<malformed>';
+      logger.warn(`egress-proxy: 403 denied CONNECT ${destination}`);
       clientSocket.end('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n');
       return;
     }
@@ -65,8 +69,11 @@ export function createEgressProxy(allowedHosts) {
       clientSocket.pipe(upstream);
     });
 
-    upstream.on('error', () => {
+    upstream.on('error', (error) => {
       clearTimeout(connectTimeout);
+      logger.error(
+        `egress-proxy: 502 upstream failure for ${target.hostname}:${target.port}: ${error.message}`,
+      );
       if (!clientSocket.destroyed) {
         clientSocket.end('HTTP/1.1 502 Bad Gateway\r\nConnection: close\r\n\r\n');
       }

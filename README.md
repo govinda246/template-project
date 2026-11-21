@@ -40,6 +40,13 @@ devコンテナから直接インターネットへ出るdefault routeはあり�
 - `objects.githubusercontent.com`
 - `codeload.github.com`
 - `raw.githubusercontent.com`
+- `marketplace.visualstudio.com`
+- `main.vscode-cdn.net`
+- `github.gallerycdn.vsassets.io`
+- `dbaeumer.gallerycdn.vsassets.io`
+- `esbenp.gallerycdn.vsassets.io`
+- `mobile.events.data.microsoft.com`
+- `api.individual.githubcopilot.com`
 - `api.githubcopilot.com`
 - `copilot-proxy.githubusercontent.com`
 - `copilot-telemetry.githubusercontent.com`
@@ -224,7 +231,7 @@ bash scripts/verify-security.sh
 - 許可していないサイトに接続できてしまう: devコンテナが`sandbox`以外のDockerネットワークへ接続されていないか`docker inspect`で確認します。
 - ポート3000が利用できない: ホストで既に使用中でないか確認します。
 - VS Code拡張が未対応になる: 固定したVS Code本体と拡張版の組み合わせを更新します。未知の設定を黙って無視せず、出力ログを確認します。
-- GitHub Copilotで有料プランを認識しない: コンテナを再ビルドした後、VS Codeのアカウントメニューから有料契約のあるGitHubアカウントでサインインし直してください。`GitHub Copilot`出力ログに`403 Forbidden`または`502 Bad Gateway`がある場合は、egress proxyの再起動状態と上記allowlistの対象ホストを確認します。
+- GitHub Copilotで無料モデルだけが表示される: まずDev Container外の同じVS Code・同じGitHubアカウントでも表示状況を比較してください。外でも表示されず、Copilot Chatは動作するがエラーも出ない場合は、コンテナの通信遮断よりGitHub側の契約・利用可能モデル・premium requestの枠・アカウント切り替えを確認してください。外では表示されるがDev Container内だけ表示されない場合は、コンテナを再ビルドし、拡張機能ビューで`GitHub Copilot`と`GitHub Copilot Chat`が有効か確認します。モデル取得や送信時のブロック先はegress proxyのログで`403 denied CONNECT`として確認できます。不足ホストは通信内容と必要性を確認してからallowlistへ完全一致で追加してください。`502 upstream failure`はallowlistではなくDNS・経路・上流接続の問題です。
 
 ## 制約
 
