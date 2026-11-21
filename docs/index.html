@@ -514,22 +514,49 @@
       <section id="security">
         <h2>守りは一重ではなく、多重になっている</h2>
         <p class="lead">1つが破られても、別の層が被害を小さくする設計です。</p>
+        <div class="grid two" style="margin-bottom: 1rem">
+          <article class="card">
+            <span class="tag green">隔壁 1：Dockerネットワーク</span>
+            <h3><code>sandbox</code> と <code>egress</code> を分離</h3>
+            <p>
+              devcontainerは外部へ直接通じない内部ネットワーク
+              <code>sandbox</code> だけに入ります。egress-proxyだけが
+              <code>sandbox</code> と外部側の <code>egress</code> の両方へ入り、
+              2つの区画のあいだで許可された通信を中継します。
+            </p>
+          </article>
+          <article class="card">
+            <span class="tag purple">隔壁 2：Bubblewrap</span>
+            <h3>コンテナの中もさらに小さな部屋に分ける</h3>
+            <p>
+              開発コマンドごとにPID、IPC、UTS、user namespaceを分離します。
+              ネットワークを完全に切る <code>--offline</code> も使え、ホームやシステム領域も
+              「見える範囲」「書き込める範囲」を限定しています。
+            </p>
+          </article>
+        </div>
+        <div class="callout" style="margin-bottom: 1rem">
+          <strong>「sandboxの隔壁」とは何か:</strong>
+          devcontainer内で動くゲームやコマンドから、直接PCやインターネットへ自由に出られないよう、
+          ネットワーク、Docker権限、ファイルシステム、プロセスの4方向に境界を置くことです。
+          egress-proxyという限定された通路を通る通信だけが外へ進めます。
+        </div>
         <div class="layers">
           <div class="layer green">
-            <strong>① ネットワーク</strong>
-            <span>直接の外部経路がなく、必要なHTTPS先だけをプロキシが許可</span>
+            <strong>① 外向き通信</strong>
+            <span><code>sandbox</code> には外への経路がなく、許可済みHTTPS先だけをプロキシが中継</span>
           </div>
           <div class="layer blue">
-            <strong>② Docker</strong>
-            <span>root権限・追加capability・Docker socket・特権モードを与えない</span>
+            <strong>② Docker権限</strong>
+            <span>root権限・追加capability・Docker socket・特権モードを与えず、ホスト操作を遮断</span>
           </div>
           <div class="layer purple">
-            <strong>③ Bubblewrap</strong>
-            <span>PIDやIPCなどを分離し、コマンドが見える範囲と書き込める範囲を限定</span>
+            <strong>③ プロセス空間</strong>
+            <span>BubblewrapでPID、IPC、UTS、user namespaceを分離し、別の作業を覗けない範囲を作成</span>
           </div>
           <div class="layer orange">
-            <strong>④ ファイル配置</strong>
-            <span>信頼する実行スクリプトはroot所有の <code>/opt/secure-template</code> に配置</span>
+            <strong>④ ファイル空間</strong>
+            <span>重要設定を読み取り専用にし、信頼スクリプトをroot所有の <code>/opt/secure-template</code> に配置</span>
           </div>
         </div>
         <div class="grid" style="margin-top: 1rem">
