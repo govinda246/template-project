@@ -14,4 +14,3 @@ mobile.events.data.microsoft.com
 api.individual.githubcopilot.com
 api.githubcopilot.com
 copilot-proxy.githubusercontent.com
-copilot-telemetry.githubusercontent.com

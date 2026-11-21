@@ -46,12 +46,12 @@ devコンテナから直接インターネットへ出るdefault routeはあり�
 - `dbaeumer.gallerycdn.vsassets.io`
 - `esbenp.gallerycdn.vsassets.io`
 - `mobile.events.data.microsoft.com`
+
 - `api.individual.githubcopilot.com`
 - `api.githubcopilot.com`
 - `copilot-proxy.githubusercontent.com`
-- `copilot-telemetry.githubusercontent.com`
 
-正規の許可先以外、平文HTTP、ポート443以外は拒否されます。HTTPS内容は復号しません。変更は[egress-allowlist.txt](.devcontainer/egress-allowlist.txt)で行い、プロキシを再起動してください。
+正規の許可先以外、平文HTTP、ポート443以外は拒否されます。HTTPS内容は復号しません。変更は[egress-allowlist.txt](.devcontainer/egress-allowlist.txt)で行い、Dev Containerを再ビルドしてください。allowlistはイメージに組み込まれるため、プロキシの再起動だけでは変更は反映されません。
 
 ### Bubblewrap
 
