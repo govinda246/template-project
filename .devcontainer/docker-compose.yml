@@ -18,6 +18,14 @@ services:
       - seccomp=./bubblewrap-seccomp.json
     cap_drop:
       - ALL
+    cpus: "2.0"
+    mem_limit: 4g
+    pids_limit: 512
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     devices:
       - /dev/net/tun:/dev/net/tun
 
@@ -48,6 +56,14 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    cpus: "0.5"
+    mem_limit: 256m
+    pids_limit: 128
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
 
 volumes:
   agent-session-history:

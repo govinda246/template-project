@@ -2,7 +2,7 @@
 
 TypeScript、Vite、Phaser 3 を使う最小2Dブラウザーゲーム基盤です。Dev Containerは既定で外部ネットワークから隔離され、必要なHTTPS通信だけをallowlist付きCONNECTプロキシへ渡します。開発コマンドはBubblewrap内で実行します。
 
-コンテナ構成の初心者向けガイドは [GitHub Pages](https://govinda246.github.io/template-project/) で確認できます。`docs/index.html` を更新すると、GitHub Actionsで自動公開されます。
+初心者向け概要は [GitHub Pages](https://govinda246.github.io/template-project/) に、制限・残存リスク・緩和方法・改善案は [詳細セキュリティ資料](https://govinda246.github.io/template-project/security-details.html) に分けています。`docs/` を更新すると、GitHub Actionsで自動公開されます。
 
 ## 前提
 
@@ -112,7 +112,7 @@ devコンテナから直接インターネットへ出るdefault routeはあり�
 
 この環境は、信頼できるホスト上で通常の開発中に外部コードやエージェント操作の被害範囲を小さくすることを目的とします。完全な防御境界ではありません。重要な秘密や本番資格情報を扱う場合、敵対的コードを解析する場合、攻撃者がホストも狙う場合は、専用VMや物理的に分離した管理端末を使用してください。
 
-特にリソース上限は現在明示設定していません。Composeのresource/PID制限、ログローテーション、監視、バックアップは運用要件に応じて追加してください。
+Composeでdevcontainerは2 CPU・4 GBメモリ・512 PID、egress proxyは0.5 CPU・256 MBメモリ・128 PIDへ制限しています。Dockerのjson-fileログもローテーションします。これで資源枯渇の可能性を減らせますが、完全な防止ではありません。
 
 ### より安全にする方針
 
@@ -125,9 +125,9 @@ devコンテナから直接インターネットへ出るdefault routeはあり�
 - CPU、メモリ、PID、ログ容量の上限
 - 外部監視、バックアップ、復旧手順
 
-通常開発で比較的追加しやすいのは、資源上限、依存関係検査、バックアップ、外部通信不要の作業での`--offline`利用です。
+資源上限、ログローテーション、GitHub ActionsのコミットSHA固定、Dependabot、npm auditを実装済みです。GitHub側ではSecret scanning、Push protection、Private vulnerability reporting、Dependabot alerts、Dependabot security updatesも有効化済みです。SBOM、バックアップ、専用VMは運用側の追加対策として残ります。
 
-公開ガイドには、追加対策なしを0点、現在の実装を62点、使い捨てVM・完全オフライン・資格情報なし・署名検証・外部監視・復旧を備えた比較用構成を100点とする相対スコアを掲載しています。これは独自の設計比較値であり、絶対的な安全度や脆弱性診断ではありません。
+公開ガイドには、追加対策なしを0点、現在の実装を71点、使い捨てVM・完全オフライン・資格情報なし・署名検証・外部監視・復旧を備えた比較用構成を100点とする相対スコアを掲載しています。これは独自の設計比較値であり、絶対的な安全度や脆弱性診断ではありません。
 
 ## 開始
 

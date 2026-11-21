@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Secure Phaser Template のDocker・ネットワーク・コンテナ構成を初心者向けに解説するページです。"
+      content="Secure Phaser Template のコンテナ構成、使い方、安全上の要点を短く解説する初心者向けページです。"
     />
-    <title>コンテナ構成ガイド | Secure Phaser Template</title>
+    <title>初心者向け概要 | Secure Phaser Template</title>
     <style>
       :root {
         color-scheme: light;
@@ -29,10 +29,6 @@
 
       * {
         box-sizing: border-box;
-      }
-
-      html {
-        scroll-behavior: smooth;
       }
 
       body {
@@ -58,103 +54,89 @@
       }
 
       header {
-        position: relative;
-        overflow: hidden;
         color: white;
         background:
-          radial-gradient(circle at 80% 15%, rgba(96, 160, 255, 0.45), transparent 32rem),
+          radial-gradient(circle at 85% 10%, rgba(96, 160, 255, 0.45), transparent 28rem),
           linear-gradient(135deg, #111c38, #244e91);
-        padding: 4.5rem 1.5rem 5.5rem;
-      }
-
-      header::after {
-        position: absolute;
-        right: -7rem;
-        bottom: -11rem;
-        width: 28rem;
-        height: 28rem;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 50%;
-        content: "";
+        padding: 4rem 1.5rem 5rem;
       }
 
       .wrap {
-        width: min(1100px, calc(100% - 2rem));
+        width: min(980px, calc(100% - 2rem));
         margin: 0 auto;
       }
 
       .eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 0.75rem;
         color: #cbdcff;
-        font-size: 0.82rem;
+        font-size: 0.8rem;
         font-weight: 700;
         letter-spacing: 0.12em;
         text-transform: uppercase;
       }
 
       h1 {
-        max-width: 820px;
-        margin: 0;
-        font-size: clamp(2.2rem, 6vw, 4.6rem);
+        max-width: 760px;
+        margin: 0.5rem 0 0;
+        font-size: clamp(2.25rem, 6vw, 4.2rem);
         line-height: 1.12;
         letter-spacing: -0.04em;
       }
 
       header p {
-        max-width: 720px;
-        margin: 1.4rem 0 0;
+        max-width: 660px;
         color: #dce8ff;
-        font-size: 1.08rem;
+        font-size: 1.05rem;
       }
 
-      .quick-nav {
+      .actions {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.65rem;
-        margin-top: 2rem;
+        gap: 0.7rem;
+        margin-top: 1.5rem;
       }
 
-      .quick-nav a {
-        padding: 0.55rem 0.85rem;
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        border-radius: 999px;
+      .button {
+        padding: 0.7rem 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        border-radius: 0.7rem;
         color: white;
-        background: rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.1);
+        font-weight: 700;
         text-decoration: none;
+      }
+
+      .button.primary {
+        border-color: white;
+        color: #17305e;
+        background: white;
       }
 
       main {
         position: relative;
-        margin-top: -2.4rem;
-        padding-bottom: 5rem;
+        margin-top: -2rem;
+        padding-bottom: 4rem;
       }
 
       section {
-        scroll-margin-top: 1.5rem;
-        margin: 1.4rem 0;
-        padding: clamp(1.25rem, 4vw, 2.4rem);
+        margin: 1.1rem 0;
+        padding: clamp(1.2rem, 4vw, 2rem);
         border: 1px solid var(--line);
-        border-radius: 1.25rem;
+        border-radius: 1rem;
         background: var(--paper);
         box-shadow: var(--shadow);
       }
 
       h2 {
         margin: 0 0 0.35rem;
-        font-size: clamp(1.5rem, 3vw, 2rem);
-        line-height: 1.3;
+        font-size: clamp(1.45rem, 3vw, 1.9rem);
       }
 
       h3 {
-        margin: 0 0 0.4rem;
-        font-size: 1.08rem;
+        margin: 0;
       }
 
       .lead {
-        margin: 0 0 1.5rem;
+        margin: 0 0 1.2rem;
         color: var(--muted);
       }
 
@@ -170,353 +152,102 @@
 
       .card {
         min-width: 0;
-        padding: 1.25rem;
+        padding: 1.1rem;
         border: 1px solid var(--line);
-        border-radius: 0.9rem;
+        border-radius: 0.85rem;
         background: #fbfcff;
         overflow-wrap: anywhere;
       }
 
-      .card p,
-      .card ul {
-        margin: 0.45rem 0 0;
+      .card p {
+        margin: 0.4rem 0 0;
         color: #46536b;
       }
 
       .tag {
         display: inline-block;
-        margin-bottom: 0.65rem;
-        padding: 0.18rem 0.55rem;
+        margin-bottom: 0.55rem;
+        padding: 0.15rem 0.5rem;
         border-radius: 999px;
-        font-size: 0.75rem;
-        font-weight: 700;
-      }
-
-      .blue {
         color: var(--blue);
         background: var(--blue-soft);
+        font-size: 0.75rem;
+        font-weight: 800;
       }
 
-      .green {
+      .tag.green {
         color: var(--green);
         background: var(--green-soft);
       }
 
-      .purple {
-        color: var(--purple);
-        background: var(--purple-soft);
-      }
-
-      .orange {
+      .tag.orange {
         color: var(--orange);
         background: var(--orange-soft);
       }
 
-      .diagram {
-        display: grid;
-        grid-template-columns: 1fr 7rem 1fr;
-        grid-template-areas:
-          "browser arrow proxy"
-          "outside arrow inside";
-        align-items: stretch;
-        gap: 1rem;
-      }
-
-      .node {
-        min-height: 130px;
-        padding: 1.2rem;
-        border: 2px solid var(--line);
-        border-radius: 1rem;
-      }
-
-      .node.browser {
-        grid-area: browser;
-        border-color: #98b8ff;
-        background: var(--blue-soft);
-      }
-
-      .node.proxy {
-        grid-area: proxy;
-        border-color: #7ad0b2;
-        background: var(--green-soft);
-      }
-
-      .node.inside {
-        grid-area: inside;
-        border-color: #aa96ea;
-        background: var(--purple-soft);
-      }
-
-      .node.outside {
-        grid-area: outside;
-        border-color: #e9ad83;
-        background: var(--orange-soft);
-      }
-
-      .arrow {
+      .flow {
         display: flex;
-        grid-area: arrow;
         align-items: center;
         justify-content: center;
-        color: var(--muted);
-        font-size: 2rem;
-        font-weight: 800;
+        gap: 0.7rem;
+        margin: 1.2rem 0;
+        font-weight: 750;
         text-align: center;
       }
 
-      .arrow small {
-        display: block;
-        font-size: 0.72rem;
-        font-weight: 500;
-      }
-
-      .layers {
-        display: grid;
-        gap: 0.65rem;
-      }
-
-      .layer {
-        display: grid;
-        grid-template-columns: 8.5rem 1fr;
-        gap: 1rem;
-        align-items: center;
-        padding: 1rem 1.2rem;
+      .flow span {
+        min-width: 0;
+        padding: 1rem;
+        border: 1px solid var(--line);
         border-radius: 0.8rem;
+        background: #fbfcff;
       }
 
-      .layer strong {
-        font-size: 0.95rem;
+      .flow .arrow {
+        border: 0;
+        background: transparent;
+        font-size: 1.5rem;
       }
 
-      .layer span {
-        color: #46536b;
-        font-size: 0.94rem;
-      }
-
-      .flow {
+      .points {
         margin: 0;
-        padding: 0;
-        list-style: none;
-        counter-reset: flow;
+        padding-left: 1.2rem;
       }
 
-      .flow li {
-        position: relative;
-        margin: 0 0 1rem;
-        padding: 0 0 0 3.3rem;
-        counter-increment: flow;
+      .points li {
+        margin: 0.3rem 0;
       }
 
-      .flow li::before {
-        position: absolute;
-        top: 0;
-        left: 0;
-        display: grid;
-        width: 2.25rem;
-        height: 2.25rem;
-        place-items: center;
-        border-radius: 50%;
-        color: white;
-        background: var(--blue);
-        font-weight: 800;
-        content: counter(flow);
-      }
-
-      .flow p {
-        margin: 0.15rem 0 0;
-        color: var(--muted);
-      }
-
-      .callout {
-        padding: 1.1rem 1.25rem;
+      .note {
+        padding: 1rem 1.1rem;
         border-left: 5px solid var(--orange);
         border-radius: 0.5rem;
         background: var(--orange-soft);
       }
 
-      .comparison {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.92rem;
+      .score {
+        display: block;
+        font-size: 2.4rem;
+        font-weight: 850;
+        line-height: 1;
       }
 
-      .comparison th,
-      .comparison td {
-        padding: 0.85rem 0.75rem;
-        border-bottom: 1px solid var(--line);
-        text-align: left;
-        vertical-align: top;
-      }
-
-      .comparison th {
-        color: var(--muted);
-        font-size: 0.76rem;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-      }
-
-      .comparison tr:last-child td {
-        border-bottom: 0;
-      }
-
-      .table-wrap {
-        overflow-x: auto;
-      }
-
-      .verdict {
-        display: inline-block;
-        min-width: 4rem;
-        padding: 0.15rem 0.5rem;
-        border-radius: 999px;
-        font-size: 0.75rem;
-        font-weight: 800;
-        text-align: center;
-      }
-
-      .verdict.keep {
-        color: var(--green);
-        background: var(--green-soft);
-      }
-
-      .verdict.conditional {
-        color: var(--orange);
-        background: var(--orange-soft);
-      }
-
-      .verdict.supporting {
-        color: var(--purple);
-        background: var(--purple-soft);
-      }
-
-      .verdict.risky {
-        color: #a52a2a;
-        background: #ffecec;
-      }
-
-      .risk-scale {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 0.75rem;
-      }
-
-      .risk-step {
-        padding: 1rem;
-        border: 1px solid var(--line);
-        border-top: 5px solid var(--blue);
-        border-radius: 0.75rem;
-        background: #fbfcff;
-      }
-
-      .risk-step:nth-child(2) {
-        border-top-color: #c08a00;
-      }
-
-      .risk-step:nth-child(3) {
-        border-top-color: var(--orange);
-      }
-
-      .risk-step:nth-child(4) {
-        border-top-color: #b42318;
-      }
-
-      .risk-step p {
-        margin: 0.35rem 0 0;
+      .score small {
         color: var(--muted);
         font-size: 0.9rem;
       }
 
-      .scorecards {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 1rem;
-      }
-
-      .scorecard {
-        padding: 1.2rem;
-        border: 1px solid var(--line);
-        border-radius: 0.9rem;
-        background: #fbfcff;
-      }
-
-      .scorecard.current {
-        border-color: #6fa9ff;
-        background: var(--blue-soft);
-      }
-
-      .scorecard.maximum {
-        border-color: #65bfa0;
-        background: var(--green-soft);
-      }
-
-      .score {
-        display: block;
-        margin: 0.15rem 0 0.35rem;
-        font-size: 2.65rem;
-        font-weight: 850;
-        letter-spacing: -0.05em;
-        line-height: 1;
-      }
-
-      .score span {
-        color: var(--muted);
-        font-size: 0.92rem;
-        font-weight: 600;
-        letter-spacing: 0;
-      }
-
-      .meter {
-        height: 0.55rem;
-        margin: 0.8rem 0;
-        overflow: hidden;
-        border-radius: 999px;
-        background: #dfe5ef;
-      }
-
-      .meter span {
-        display: block;
-        width: var(--score);
-        height: 100%;
-        border-radius: inherit;
-        background: var(--blue);
-      }
-
-      .scorecard.maximum .meter span {
-        background: var(--green);
-      }
-
-      .priority {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 0.75rem;
-        align-items: start;
-        padding: 0.8rem 0;
-        border-bottom: 1px solid var(--line);
-      }
-
-      .priority:last-child {
-        border-bottom: 0;
-      }
-
-      .priority strong {
-        display: block;
-      }
-
-      .priority p {
-        margin: 0.15rem 0 0;
-        color: var(--muted);
-      }
-
       .commands {
         overflow-x: auto;
-        padding: 1rem 1.2rem;
-        border-radius: 0.85rem;
+        padding: 1rem 1.1rem;
+        border-radius: 0.75rem;
         color: #eaf1ff;
         background: #152038;
       }
 
       .commands pre {
         margin: 0;
-        font: 0.9rem/1.7 Consolas, "SFMono-Regular", monospace;
+        font: 0.88rem/1.7 Consolas, monospace;
       }
 
       footer {
@@ -526,212 +257,45 @@
       }
 
       @media (max-width: 760px) {
-        body {
-          font-size: 0.94rem;
-        }
-
         header {
-          padding: 3rem 0.9rem 4.2rem;
-        }
-
-        header p {
-          font-size: 1rem;
+          padding: 3rem 0.9rem 4rem;
         }
 
         .wrap {
-          width: min(100% - 1rem, 1100px);
+          width: calc(100% - 1rem);
         }
 
-        main {
-          margin-top: -1.8rem;
+        .grid,
+        .grid.two {
+          grid-template-columns: 1fr;
         }
 
         section {
           margin: 0.9rem 0;
           padding: 1.15rem;
-          border-radius: 0.9rem;
         }
 
-        h1 {
-          letter-spacing: -0.025em;
+        .flow {
+          flex-direction: column;
         }
 
-        .quick-nav {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .quick-nav a {
-          min-width: 0;
-          padding: 0.45rem 0.65rem;
-          text-align: center;
-        }
-
-        .grid,
-        .risk-scale,
-        .scorecards,
-        .grid.two,
-        .diagram {
-          grid-template-columns: 1fr;
-        }
-
-        .diagram {
-          grid-template-areas:
-            "browser"
-            "arrow"
-            "proxy"
-            "inside"
-            "outside";
-        }
-
-        .arrow {
-          min-height: 3rem;
-          transform: rotate(90deg);
-        }
-
-        .layer {
-          grid-template-columns: 1fr;
-          gap: 0.2rem;
-        }
-
-        .layer {
-          padding: 0.8rem 0.9rem;
-        }
-
-        .node {
-          min-height: auto;
-        }
-
-        .table-wrap {
-          overflow: visible;
-        }
-
-        .comparison,
-        .comparison tbody,
-        .comparison tr,
-        .comparison td {
-          display: block;
+        .flow span {
           width: 100%;
         }
 
-        .comparison thead {
-          display: none;
+        .flow .arrow {
+          width: auto;
+          min-height: 0;
+          padding: 0;
+          transform: rotate(90deg);
         }
 
-        .comparison tr {
-          margin-bottom: 0.9rem;
-          padding: 0.35rem 0.9rem;
-          border: 1px solid var(--line);
-          border-radius: 0.75rem;
-          background: #fbfcff;
+        .actions {
+          display: grid;
         }
 
-        .comparison td {
-          padding: 0.65rem 0;
-          border-bottom: 1px dashed var(--line);
-          overflow-wrap: anywhere;
-        }
-
-        .comparison td::before {
-          display: block;
-          margin-bottom: 0.18rem;
-          color: var(--muted);
-          font-size: 0.72rem;
-          font-weight: 800;
-          letter-spacing: 0.04em;
-        }
-
-        .comparison td:first-child::before {
-          content: "項目";
-        }
-
-        .comparison td:nth-child(2)::before {
-          content: "内容";
-        }
-
-        .comparison td:nth-child(3)::before {
-          content: "防御区分・利便性";
-        }
-
-        .comparison td:nth-child(4)::before {
-          content: "対策・リスク";
-        }
-
-        .comparison td:nth-child(5)::before {
-          content: "リスク";
-        }
-
-        .comparison.limits td:first-child::before {
-          content: "できないこと";
-        }
-
-        .comparison.limits td:nth-child(2)::before {
-          content: "安全上の理由";
-        }
-
-        .comparison.limits td:nth-child(3)::before {
-          content: "防御区分";
-        }
-
-        .comparison.limits td:nth-child(4)::before {
-          content: "代替・注意点";
-        }
-
-        .comparison td:last-child,
-        .comparison tr:last-child td {
-          border-bottom: 0;
-        }
-
-        .comparison.relaxation td:first-child::before {
-          content: "目的";
-        }
-
-        .comparison.relaxation td:nth-child(2)::before {
-          content: "最小限の緩め方";
-        }
-
-        .comparison.relaxation td:nth-child(3)::before {
-          content: "増える利便性";
-        }
-
-        .comparison.relaxation td:nth-child(4)::before {
-          content: "主なリスク";
-        }
-
-        .comparison.residual td:first-child::before {
-          content: "残る問題";
-        }
-
-        .comparison.residual td:nth-child(2)::before {
-          content: "防ぎ切れない理由";
-        }
-
-        .comparison.residual td:nth-child(3)::before {
-          content: "期待できること";
-        }
-
-        .comparison.residual td:nth-child(4)::before {
-          content: "追加の対策";
-        }
-
-        .comparison.current-score td:first-child::before {
-          content: "比較項目";
-        }
-
-        .comparison.current-score td:nth-child(2)::before {
-          content: "追加対策なし";
-        }
-
-        .comparison.current-score td:nth-child(3)::before {
-          content: "現在のプロジェクト";
-        }
-
-        .comparison.current-score td:nth-child(4)::before {
-          content: "比較用の最安全構成";
-        }
-
-        .commands pre {
-          font-size: 0.82rem;
+        .button {
+          text-align: center;
         }
       }
     </style>
@@ -739,754 +303,120 @@
   <body>
     <header>
       <div class="wrap">
-        <div class="eyebrow">初心者向け構成ガイド</div>
-        <h1>このゲーム開発環境を、外側から順番に理解する</h1>
+        <div class="eyebrow">初心者向け概要</div>
+        <h1>ゲーム開発用の安全なコンテナ環境</h1>
         <p>
-          Docker、Dev Container、ネットワーク、Bubblewrapなどを難しい言葉だけでなく、
-          「誰が・どこで・何を守っているか」という視点で説明します。
+          TypeScript・Vite・Phaserを使う開発環境です。通常の開発をしやすくしながら、
+          外部通信、Docker権限、資格情報、重要ファイルへのアクセスを分離しています。
         </p>
-        <nav class="quick-nav" aria-label="ページ内メニュー">
-          <a href="#map">全体図</a>
-          <a href="#roles">役割</a>
-          <a href="#network">通信</a>
-          <a href="#security">セキュリティ</a>
-          <a href="#limits">制限と理由</a>
-          <a href="#relaxation">緩め方</a>
-          <a href="#not-protected">防げない問題</a>
-          <a href="#improvements">安全性を高める</a>
-          <a href="#start">起動方法</a>
-        </nav>
+        <div class="actions">
+          <a class="button primary" href="#start">ゲームを起動する</a>
+          <a class="button" href="./security-details.html">詳細セキュリティ資料を見る</a>
+          <a class="button" href="https://github.com/govinda246/template-project">GitHubを見る</a>
+        </div>
       </div>
     </header>
 
     <main class="wrap">
-      <section id="map">
-        <h2>まず、全体像をつかむ</h2>
-        <p class="lead">
-          この環境は「ゲームを作る部屋」と「外との出入口を管理する門番」の2つが中心です。
-          ブラウザーはlocalhostの3000番へ入り、門番を通ってゲーム画面に届きます。
-        </p>
-        <div class="diagram" aria-label="コンテナ構成図">
-          <div class="node browser">
-            <span class="tag blue">ローカルPC</span>
-            <h3>ブラウザーとVS Code</h3>
-            <p>ゲーム表示: <code>127.0.0.1:3000</code><br />ソースコード編集: VS Code</p>
-          </div>
-          <div class="arrow">
-            <div>⇄<small>必要な通信だけ</small></div>
-          </div>
-          <div class="node proxy">
-            <span class="tag green">egress-proxy</span>
-            <h3>通信の門番</h3>
-            <p>ブラウザーからゲームへ中継し、外向き通信を許可リストで確認します。</p>
-          </div>
-          <div class="node inside">
-            <span class="tag purple">devcontainer</span>
-            <h3>ゲームを作る部屋</h3>
-            <p>Node.js、Vite、Phaserが動く開発環境です。通常は外部と直接つながりません。</p>
-          </div>
-          <div class="node outside">
-            <span class="tag orange">インターネット</span>
-            <h3>必要な外部サービス</h3>
-            <p>npm registryやGitHubなど、許可されたHTTPSサイトだけへ接続できます。</p>
-          </div>
+      <section>
+        <h2>30秒で分かる構成</h2>
+        <p class="lead">開発作業と外部通信を担当する2つのコンテナに分けています。</p>
+        <div class="flow" aria-label="コンテナ構成">
+          <span>ローカルPC<br /><small>VS Code・ブラウザー</small></span>
+          <span class="arrow" aria-hidden="true">→</span>
+          <span>egress-proxy<br /><small>通信の確認と中継</small></span>
+          <span class="arrow" aria-hidden="true">→</span>
+          <span>devcontainer<br /><small>Node.js・Vite・Phaser</small></span>
         </div>
-      </section>
-
-      <section id="roles">
-        <h2>2つのコンテナの役割</h2>
-        <p class="lead">同じDockerイメージから作られていますが、仕事は分けられています。</p>
-        <div class="grid two">
+        <div class="grid">
           <article class="card">
-            <span class="tag purple">開発担当</span>
+            <span class="tag">開発</span>
             <h3>devcontainer</h3>
-            <ul>
-              <li>VS Codeが接続する作業場所</li>
-              <li>TypeScriptとPhaserでゲームを編集</li>
-              <li>Viteが3000番でゲームを配信</li>
-              <li>プロジェクトを <code>/workspaces/github_agent_test</code> に共有</li>
-              <li>通常ユーザー <code>node</code> で動作</li>
-            </ul>
+            <p>ソース編集、npm、Viteを実行します。外部との直接接続経路はありません。</p>
           </article>
           <article class="card">
-            <span class="tag green">通信担当</span>
+            <span class="tag green">通信</span>
             <h3>egress-proxy</h3>
-            <ul>
-              <li>PCの3000番からdevcontainerのViteへ中継</li>
-              <li>外向き通信のホスト名を検査</li>
-              <li>HTTPSの443番だけを許可</li>
-              <li>許可対象は <code>egress-allowlist.txt</code> で管理</li>
-              <li>読み取り専用のコンテナとして動作</li>
-            </ul>
+            <p>許可されたHTTPS先だけを中継し、ゲーム画面もローカルPCへ転送します。</p>
+          </article>
+          <article class="card">
+            <span class="tag orange">分離</span>
+            <h3>Bubblewrap</h3>
+            <p>コマンドごとにプロセス空間を分離し、重要フォルダーを読み取り専用にします。</p>
           </article>
         </div>
       </section>
 
-      <section id="network">
-        <h2>通信はどう流れる？</h2>
-        <p class="lead">ゲーム表示と外部通信では、流れが少し異なります。</p>
+      <section>
+        <h2>この環境がしていること</h2>
         <div class="grid two">
           <article class="card">
-            <span class="tag blue">A. ゲームを見る</span>
-            <ol class="flow">
-              <li>
-                <strong>ブラウザーがlocalhostへアクセス</strong>
-                <p><code>http://127.0.0.1:3000</code> を開きます。</p>
-              </li>
-              <li>
-                <strong>egress-proxyの3000番が受け取る</strong>
-                <p>PCから見える入口はプロキシだけです。</p>
-              </li>
-              <li>
-                <strong>devcontainerのViteへ中継</strong>
-                <p><code>sandbox</code> ネットワーク内の3000番へ送ります。</p>
-              </li>
-            </ol>
-          </article>
-          <article class="card">
-            <span class="tag orange">B. npmなどへ接続する</span>
-            <ol class="flow">
-              <li>
-                <strong>devcontainerから通信を開始</strong>
-                <p>プロキシ設定により直接外へ出ません。</p>
-              </li>
-              <li>
-                <strong>名前とポートをチェック</strong>
-                <p>許可リストの完全一致か、443番かを確認します。</p>
-              </li>
-              <li>
-                <strong>許可された場合だけ中継</strong>
-                <p>データの中身は復号せず、HTTPSのトンネルを開きます。</p>
-              </li>
-            </ol>
-          </article>
-        </div>
-        <div class="callout">
-          <strong>大切な点:</strong>
-          devcontainerは <code>sandbox</code> という内部ネットワークだけに接続します。
-          外部側の <code>egress</code> へ接続できるのはegress-proxyだけです。
-        </div>
-      </section>
-
-      <section id="security">
-        <h2>守りは一重ではなく、多重になっている</h2>
-        <p class="lead">1つが破られても、別の層が被害を小さくする設計です。</p>
-        <div class="grid two" style="margin-bottom: 1rem">
-          <article class="card">
-            <span class="tag green">隔壁 1：Dockerネットワーク</span>
-            <h3><code>sandbox</code> と <code>egress</code> を分離</h3>
-            <p>
-              devcontainerは外部へ直接通じない内部ネットワーク
-              <code>sandbox</code> だけに入ります。egress-proxyだけが
-              <code>sandbox</code> と外部側の <code>egress</code> の両方へ入り、
-              2つの区画のあいだで許可された通信を中継します。
-            </p>
-          </article>
-          <article class="card">
-            <span class="tag purple">隔壁 2：Bubblewrap</span>
-            <h3>コンテナの中もさらに小さな部屋に分ける</h3>
-            <p>
-              開発コマンドごとにPID、IPC、UTS、user namespaceを分離します。
-              ネットワークを完全に切る <code>--offline</code> も使え、ホームやシステム領域も
-              「見える範囲」「書き込める範囲」を限定しています。
-            </p>
-          </article>
-        </div>
-        <div class="callout" style="margin-bottom: 1rem">
-          <strong>「sandboxの隔壁」とは何か:</strong>
-          devcontainer内で動くゲームやコマンドから、直接PCやインターネットへ自由に出られないよう、
-          ネットワーク、Docker権限、ファイルシステム、プロセスの4方向に境界を置くことです。
-          egress-proxyという限定された通路を通る通信だけが外へ進めます。
-        </div>
-        <div class="layers">
-          <div class="layer green">
-            <strong>① 外向き通信</strong>
-            <span><code>sandbox</code> には外への経路がなく、許可済みHTTPS先だけをプロキシが中継</span>
-          </div>
-          <div class="layer blue">
-            <strong>② Docker権限</strong>
-            <span>root権限・追加capability・Docker socket・特権モードを与えず、ホスト操作を遮断</span>
-          </div>
-          <div class="layer purple">
-            <strong>③ プロセス空間</strong>
-            <span>BubblewrapでPID、IPC、UTS、user namespaceを分離し、別の作業を覗けない範囲を作成</span>
-          </div>
-          <div class="layer orange">
-            <strong>④ ファイル空間</strong>
-            <span>重要設定を読み取り専用にし、信頼スクリプトをroot所有の <code>/opt/secure-template</code> に配置</span>
-          </div>
-        </div>
-        <div class="grid" style="margin-top: 1rem">
-          <article class="card">
-            <h3>書き込みできる場所</h3>
-            <p>主にゲームのソースコード。<code>src</code> などの通常作業フォルダーです。</p>
-          </article>
-          <article class="card">
-            <h3>読み取り専用の場所</h3>
-            <p><code>.git</code>、<code>.devcontainer</code>、<code>.github</code>、<code>.vscode</code>、<code>scripts</code>。</p>
-          </article>
-          <article class="card">
-            <h3>使えない危険な操作</h3>
-            <p><code>docker</code>、<code>sudo</code>、<code>mount</code>、Copilot CLIの直接起動など。</p>
-          </article>
-        </div>
-      </section>
-
-      <section id="limits">
-        <h2>安全性のためにできないことと、その正当性</h2>
-        <p class="lead">
-          制限には「主要防御」「条件付きで必要」「補助的な事故防止」の違いがあります。
-          補助策は完全な防御ではなく、各制限の役割と位置づけを区別します。
-        </p>
-        <div class="table-wrap">
-          <table class="comparison limits">
-            <thead>
-              <tr>
-                <th>できないこと</th>
-                <th>安全上の理由</th>
-                <th>防御区分</th>
-                <th>代替・注意点</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>許可リスト外のサイト・APIへ自由に接続</td>
-                <td>
-                  ソースコードや資格情報の持ち出しと、悪意ある実行ファイルの取得を減らします。
-                  平文HTTPや443番以外も中継しません。
-                </td>
-                <td><span class="verdict keep">主要防御</span></td>
-                <td>
-                  必要なホストを完全一致で確認して
-                  <code>egress-allowlist.txt</code> に追加します。
-                </td>
-              </tr>
-              <tr>
-                <td>PC・LAN内の別サービスへ直接接続</td>
-                <td>
-                  コンテナからホストや家庭内・会社内機器を探索・操作されないようにします。
-                  <code>localhost:3000</code> は公開されたゲーム入口に限られます。
-                </td>
-                <td><span class="verdict keep">主要防御</span></td>
-                <td>連携が必要なら、必要なAPIだけを明示的な窓口として設計します。</td>
-              </tr>
-              <tr>
-                <td>Docker、sudo、mount、nsenterなどの管理操作</td>
-                <td>
-                  Docker socketはマウントせず、全capabilityを外し、特権モードも使いません。
-                  これを変えるとコンテナ隔離そのものが弱くなります。
-                </td>
-                <td><span class="verdict keep">主要防御</span></td>
-                <td>管理操作はコンテナ外で人が実行します。名前による拒否は補助策です。</td>
-              </tr>
-              <tr>
-                <td>SSH接続・SSH経由のGit push</td>
-                <td>
-                  SSHは22番などの未許可ポートで接続でき、ホスト鍵や外部秘密鍵も渡されません。
-                  任意サーバーを新しい通信経路にしないためです。
-                </td>
-                <td><span class="verdict keep">主要防御</span></td>
-                <td>pushや管理はホスト側で確認して行います。</td>
-              </tr>
-              <tr>
-                <td>GitHubやクラウドの資格情報を自動利用</td>
-                <td>
-                  侵害された依存関係や実行コマンドが、リポジトリやクラウドへ認証済み操作を行うことを防ぎます。
-                </td>
-                <td><span class="verdict keep">主要防御</span></td>
-                <td>必要なときだけホスト側で認証し、短命なトークンを使います。</td>
-              </tr>
-              <tr>
-                <td><code>.git</code>、設定、scriptsを安全シェルから書き換え</td>
-                <td>
-                  エージェントが自身の制限、CI、信頼スクリプトを同じ実行中に書き換える経路を防ぎます。
-                </td>
-                <td><span class="verdict keep">主要防御</span></td>
-                <td>
-                  人が差分をレビューし、変更後に<code>Dev Containers: Rebuild Container</code>で再確認します。
-                </td>
-              </tr>
-              <tr>
-                <td>Copilot CLIの直接起動や自動承認された端末操作</td>
-                <td>
-                  監督のない入れ子実行と、レビュー前の危険な操作を減らします。
-                  ただしコマンド名検査は回避可能なので主要防御ではありません。
-                </td>
-                <td><span class="verdict supporting">補助防御</span></td>
-                <td>
-                  VS Codeの手動承認付きAgent、ネットワーク分離、資格情報非継承が本体の防御です。
-                </td>
-              </tr>
-              <tr>
-                <td>npm依存関係や取得したスクリプトを完全に信頼しない</td>
-                <td>
-                  許可リストは通信先を絞るだけで、npmパッケージやGitHub上のコード自体が安全とは保証しません。
-                  依存関係スクリプトは通常コマンド権限で動きます。
-                </td>
-                <td><span class="verdict conditional">別途対策</span></td>
-                <td>
-                  lockfile、バージョン固定、差分レビュー、npmスクリプト確認、必要なら
-                  <code>npm ci --ignore-scripts</code> を使います。
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="callout" style="margin-top: 1rem">
-          <strong>設計上の位置づけ:</strong>
-          主要な制限は、セキュリティ上の目的と実際の防御に対応しています。
-          一方、特定コマンド名を弾く方式は事故防止の補助策であり、完全な防御ではありません。
-          また、許可したGitHubやnpmのホスト名から流れるコードは安全性を保証されないため、
-          通信制限だけでなく依存関係のレビューが必要です。
-        </div>
-      </section>
-
-      <section id="relaxation">
-        <h2>利便性のために制限を緩める方法</h2>
-        <p class="lead">
-          いきなり全制限を解除するのではなく、目的ごとに最小限だけ緩めます。
-          特に「許可した通信先」と「与えた資格情報」は別々に管理します。
-        </p>
-        <div class="risk-scale" aria-label="制限緩和のリスク段階">
-          <article class="risk-step">
-            <span class="tag green">段階1・低</span>
-            <h3>ホストを追加</h3>
-            <p>必要なAPIを完全一致で1件ずつ許可します。最も狭い緩和です。</p>
-          </article>
-          <article class="risk-step">
-            <span class="tag orange">段階2・中</span>
-            <h3>承認を増やす</h3>
-            <p>特定操作だけ自動承認します。資格情報は渡さないままにします。</p>
-          </article>
-          <article class="risk-step">
-            <span class="tag orange">段階3・高</span>
-            <h3>資格情報を渡す</h3>
-            <p>短命トークンや限定権限だけに絞り、利用後に削除します。</p>
-          </article>
-          <article class="risk-step">
-            <span class="tag orange">段階4・重大</span>
-            <h3>Docker・ホストへ接続</h3>
-            <p>コンテナ隔離を越えます。別環境で人が明示実行する方が安全です。</p>
-          </article>
-        </div>
-
-        <div class="table-wrap" style="margin-top: 1.25rem">
-          <table class="comparison relaxation">
-            <thead>
-              <tr>
-                <th>目的</th>
-                <th>最小限の緩め方</th>
-                <th>増える利便性</th>
-                <th>主なリスク</th>
-                <th>リスク</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>特定APIや追加パッケージを使う</td>
-                <td>
-                  完全なホスト名と必要性を確認し、
-                  <code>egress-allowlist.txt</code> に追加してプロキシを再起動。
-                  ワイルドカードやIPの無制限許可は避ける。
-                </td>
-                <td>npm package、公式API、固定CDNを利用できる</td>
-                <td>
-                  許可ホストから悪意あるコードやデータを受け取る可能性。
-                  大きなGitHub/npm配信網は「ホスト単位」では内容保証にならない。
-                </td>
-                <td><span class="verdict conditional">要レビュー</span></td>
-              </tr>
-              <tr>
-                <td>PC上の開発サーバーやDBと連携</td>
-                <td>
-                  host/ポート単位の専用プロキシを設け、必要なAPIだけ転送する。
-                  host networkや全ポート公開は行わない。
-                </td>
-                <td>ローカルDB、画像生成、モックAPIなどと連携できる</td>
-                <td>LAN探索、管理画面や認証済みローカルサービスへの不正アクセス。</td>
-                <td><span class="verdict conditional">用途限定</span></td>
-              </tr>
-              <tr>
-                <td>GitHub pushを容器内でも使う</td>
-                <td>
-                  標準手順ではホスト側pushを使用。必要な場合は期限・対象リポジトリ・権限を限定した
-                  fine-grained tokenを一時的に渡す。
-                  長期的な個人トークンやSSH秘密鍵は渡さない。
-                </td>
-                <td>Agentからのコミット後すぐ公開できる</td>
-                <td>侵害されたコードが権限内のリポジトリを書き換えられる。</td>
-                <td><span class="verdict risky">高リスク</span></td>
-              </tr>
-              <tr>
-                <td>反復作業を自動承認する</td>
-                <td>
-                  <code>chat.tools.terminal.autoApprove</code> は読み取り専用コマンドや
-                  テストなど、完全一致のコマンドだけに限定する。
-                  ワイルドカードや任意シェル実行を許可しない。
-                </td>
-                <td>確認回数を減らし、定型テストや差分確認を速くできる</td>
-                <td>
-                  自動承認範囲が広すぎると、見せかけた同名操作やコマンド連結を通す可能性。
-                  破壊的操作は常に手動承認。
-                </td>
-                <td><span class="verdict conditional">限定的</span></td>
-              </tr>
-              <tr>
-                <td>Agentに設定ファイルを編集させる</td>
-                <td>
-                  変更対象を<code>.vscode</code>など1種類に限定し、
-                  <code>.git</code>・信頼スクリプト・セキュリティ設定は読み取り専用のままにする。
-                </td>
-                <td>開発ツール設定の更新が楽になる</td>
-                <td>セキュリティガードレールやCIを実行主体が直接弱められる。</td>
-                <td><span class="verdict risky">高リスク</span></td>
-              </tr>
-              <tr>
-                <td>コンテナからDockerを使う</td>
-                <td>
-                  原則として行わず、ホスト側の承認付きスクリプトや別管理マシンを使う。
-                  Docker socketのマウントやprivilegedはこの環境では推奨しない。
-                </td>
-                <td>テスト用コンテナや複合サービスをAgentから起動できる</td>
-                <td>
-                  Docker socket利用者は実質的にホスト管理者。ファイル読み出し、
-                  コンテナ作成、マウントによる資格情報窃取が可能。
-                </td>
-                <td><span class="verdict risky">非推奨</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="grid two" style="margin-top: 1rem">
-          <article class="card">
-            <span class="tag green">安全な緩和の順番</span>
-            <ol>
-              <li>必要な目的と期限を決める</li>
-              <li>許可する対象を1つだけ追加する</li>
-              <li>コード・設定差分を人がレビューする</li>
-              <li>再ビルドしてセキュリティテストを実行する</li>
-              <li>不要になった許可・秘密を削除する</li>
-            </ol>
-          </article>
-          <article class="card">
-            <span class="tag orange">同時に緩めないもの</span>
-            <ul>
-              <li>外部ネットワークと長期資格情報</li>
-              <li>Docker socketと保護ファイルへの書き込み</li>
-              <li>host networkと自動承認</li>
-              <li>任意コード実行とクラウド管理権限</li>
+            <span class="tag green">主な防御</span>
+            <ul class="points">
+              <li>許可リスト外の外部通信を拒否</li>
+              <li>Docker socketと追加権限を非公開</li>
+              <li>GitHub・クラウドの資格情報を渡さない</li>
+              <li><code>.git</code>や信頼スクリプトを読み取り専用にする</li>
+              <li>端末・編集を手動承認で実行</li>
             </ul>
-            <p>同時に緩めると、侵害時に被害がホストや外部サービスへ直結します。</p>
-          </article>
-        </div>
-        <div class="callout" style="margin-top: 1rem">
-          <strong>緩和方針:</strong>
-          「できることを増やす」より「今回必要な1機能だけを期限付きで許可する」方が安全です。
-          緩和後もネットワーク、資格情報、ファイル、Docker権限は別々に見直し、
-          1つを緩めても他の層は変更しません。
-        </div>
-      </section>
-
-      <section id="not-protected">
-        <h2>この環境でも防御できない、または保証できない問題</h2>
-        <p class="lead">
-          サンドボックスは被害の入口と範囲を狭めますが、完全な安全を保証するものではありません。
-          以下は、設定しても残る重要なリスクです。
-        </p>
-        <div class="table-wrap">
-          <table class="comparison residual">
-            <thead>
-              <tr>
-                <th>残る問題</th>
-                <th>なぜ防ぎ切れないか</th>
-                <th>期待できること</th>
-                <th>追加で必要な対策</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>許可済みホストからの悪意あるコード</td>
-                <td>
-                  GitHub、npm registry、許可APIは通信先を識別するだけで、
-                  パッケージやリポジトリの内容を信頼できると判断していません。
-                </td>
-                <td>通信先を固定し、未知の外向き接続や資格情報への接続を制限できる</td>
-                <td>lockfile固定、署名・出所確認、依存関係差分、lifecycle script確認、SBOM・脆弱性監査</td>
-              </tr>
-              <tr>
-                <td>許可範囲内へのデータ送信</td>
-                <td>
-                  許可したGitHubやAPIへのHTTPSは復号せず中継します。
-                  正規に見える接続の中身まで検査する設計ではありません。
-                </td>
-                <td>許可していないドメインへの直接送信を減らせる</td>
-                <td>秘密を置かない、送信データ最小化、プロキシログやサービス監査ログ、外部のDLP</td>
-              </tr>
-              <tr>
-                <td>Linuxカーネル・Docker・Bubblewrapの未知の脆弱性</td>
-                <td>
-                  これらは共通のカーネルと実行基盤に依存するため、
-                  コンテナ脱出や権限昇格の脆弱性をこの設定だけで消すことはできません。
-                </td>
-                <td>権限削除と多層化により、脆弱性を利用しにくくし被害を限定できる</td>
-                <td>ホストOS・Docker・カーネル・イメージの更新、再現テスト、重要作業は専用VM</td>
-              </tr>
-              <tr>
-                <td>プロジェクト領域内のファイル破壊・改ざん</td>
-                <td>
-                  ゲーム開発のため、<code>src</code>など多くのプロジェクトファイルには書き込み権限があります。
-                </td>
-                <td><code>.git</code>や設定ファイルの一部は読み取り専用にできる</td>
-                <td>Git差分、バックアップ、遠隔コピー、重要ファイルの権限分離、未コミット作業の回収手順</td>
-              </tr>
-              <tr>
-                <td>CPU・メモリ・ディスクの使い切り</td>
-                <td>
-                  Compose設定は現在、明示的なCPU・メモリ・PID数・ディスク容量の上限を設けていません。
-                  悪意ある処理や暴走したビルドがホスト資源を消費する可能性があります。
-                </td>
-                <td>namespace分離でプロセス空間は分けられるが、資源制限そのものは保証しない</td>
-                <td>Compose resource limit、Docker PID制限、ログ上限、監視、バックアップ</td>
-              </tr>
-              <tr>
-                <td>プロンプトインジェクションや人を騙す指示</td>
-                <td>
-                  文書・画面・依存関係の内容が信頼できるとは限らず、モデルや人に危険な操作を促す場合があります。
-                  技術的制限だけでは意図や騙しを判定できません。
-                </td>
-                <td>自動承認を切り、危険な権限・資格情報・通信先を分離できる</td>
-                <td>人による差分レビュー、操作前確認、外部コンテンツを指示として扱わないルール</td>
-              </tr>
-              <tr>
-                <td>ブラウザー・VS Code拡張・IDE自体の脆弱性</td>
-                <td>
-                  エディターや拡張機能は開発環境と統合され、独自の更新・権限モデルを持ちます。
-                  ゲームコード用sandboxの外側で動く部分もあります。
-                </td>
-                <td>拡張のバージョン固定、編集・端末の手動承認、不要な権限の無効化はできる</td>
-                <td>拡張の最小化、公式配布元確認、VS Code/ブラウザーの更新、拡張権限レビュー</td>
-              </tr>
-              <tr>
-                <td>ホストが既に侵害されている場合</td>
-                <td>
-                  Docker、ブラウザー、ファイルシステム、入力端末の土台であるホスト自体が安全とは限りません。
-                  コンテナはホストからの攻撃を防ぐ境界ではありません。
-                </td>
-                <td>ホストへ渡す権限を減らし、侵害時の対象範囲を小さくできる</td>
-                <td>マルウェア対策、ホスト更新、ディスク暗号化、バックアップ、強い資格管理</td>
-              </tr>
-              <tr>
-                <td>公開GitHub Pagesやリポジトリからの情報漏えい</td>
-                <td>
-                  GitHub Pagesは公開サイトで、リポジトリも現在Publicです。
-                  コンテナ内の秘密があるとは限りませんが、一度コミットした情報は履歴に残り得ます。
-                </td>
-                <td>資格情報を渡さず、公開対象を<code>docs</code>へ絞る</td>
-                <td>公開前レビュー、secret scanning、コミット履歴確認、秘密発見時の直ちに失効・履歴整理</td>
-              </tr>
-              <tr>
-                <td>設定ミス・緩和の積み重ね</td>
-                <td>
-                  Docker socket、host network、特権モード、広い自動承認、長期資格情報を後から追加すると、
-                  本来の境界を上書きできます。
-                </td>
-                <td>現在の設定では主要な緩和を無効にしている</td>
-                <td>変更ごとのレビュー、セキュリティテスト、期限付き例外、不要な権限の削除</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="callout" style="margin-top: 1rem">
-          <strong>この環境の前提:</strong>
-          ホストOS、Docker、VS Code、実行イメージは信頼し、通常の開発者の誤操作と
-          プロジェクト内コードの侵害を減らすことを主目的とします。
-          非常に危険なマルウェア解析、秘密情報を扱う作業、敵対的な本番管理には、
-          更新済みの専用VMやハードウェア隔離された管理端末が必要です。
-        </div>
-      </section>
-
-      <section id="improvements">
-        <h2>より安全にするための方針</h2>
-        <p class="lead">
-          このプロジェクトでは、日常のゲーム開発に必要な利便性を保つため全てを採用していません。
-          ただし、重要な作業では次のより強い構成を選べます。
-        </p>
-
-        <div class="grid two">
-          <article class="card">
-            <span class="tag green">簡単に追加しやすい対策</span>
-            <div class="priority">
-              <span class="tag blue">1</span>
-              <div>
-                <strong>資源上限を設定</strong>
-                <p>CPU・メモリ・PID・ログ容量の上限をComposeに追加し、暴走によるホスト停止を防ぎます。</p>
-              </div>
-            </div>
-            <div class="priority">
-              <span class="tag blue">2</span>
-              <div>
-                <strong>依存関係を自動検査</strong>
-                <p>npm audit、Dependabot、Secret scanning、SBOM生成をCIへ追加し、弱点と秘密の混入を早期検出します。</p>
-              </div>
-            </div>
-            <div class="priority">
-              <span class="tag blue">3</span>
-              <div>
-                <strong>変更前バックアップ</strong>
-                <p>変更前スナップショットやリモートバックアップを作り、開発ファイル破壊からの復旧時間を短くします。</p>
-              </div>
-            </div>
-            <div class="priority">
-              <span class="tag blue">4</span>
-              <div>
-                <strong>ネットワークの一時無効化</strong>
-                <p>外部通信不要のビルド・テストでは <code>--offline</code> を使い、接続可能時間を最小化します。</p>
-              </div>
-            </div>
           </article>
           <article class="card">
-            <span class="tag orange">このプロジェクトでは採用していない、より強い方法</span>
-            <ul>
-              <li>開発ごとに使い捨ての専用VMを作り、作業後に破棄</li>
-              <li>完全オフライン環境で事前承認済み依存関係だけを使用</li>
-              <li>共有フォルダーではなく、読み取り専用コピーと成果物だけを受け渡し</li>
-              <li>資格情報のない物理的・管理的に分離した端末で公開操作</li>
-              <li>ネットワーク、ファイル、プロセスのログを外部監視基盤へ送信</li>
-              <li>CIで署名済み成果物だけをデプロイし、内容・出所を検証</li>
+            <span class="tag orange">残る注意点</span>
+            <ul class="points">
+              <li>許可したnpm/GitHubの内容自体は安全とは保証されない</li>
+              <li>書き込み可能なゲームファイルは破壊・改ざんされ得る</li>
+              <li>資源消費やカーネル脆弱性を完全には防げない</li>
+              <li>Publicリポジトリへ秘密をコミットすると公開され得る</li>
             </ul>
-            <p>
-              これらはより強い隔離を提供しますが、起動時間、操作手順、更新管理、
-              ハードウェア・運用コストが増えるため、通常のブラウザーゲーム開発には未採用です。
-            </p>
           </article>
-        </div>
-
-        <h3 style="margin-top: 1.5rem">最安全な構成との相対比較</h3>
-        <p class="lead">
-          下表は10項目を各10点で評価する、このガイド独自の「設計比較スコア」です。
-          公的なセキュリティ評価ではなく、未知の脆弱性や運用ミスを含む絶対保証でもありません。
-          「追加対策なし」は追加防御を0点とした基準であり、OSやGitHubが備える標準防御までは0点ではありません。
-        </p>
-        <div class="scorecards">
-          <article class="scorecard">
-            <span class="tag orange">追加対策なし</span>
-            <strong class="score">0 <span>/ 100</span></strong>
-            <div class="meter" style="--score: 0%"><span></span></div>
-            <p>ホスト上で自由に実行し、追加の隔離・資格情報分離・通信制限・復旧策を用意しない基準状態。</p>
-          </article>
-          <article class="scorecard current">
-            <span class="tag blue">現在のプロジェクト</span>
-            <strong class="score">62 <span>/ 100</span></strong>
-            <div class="meter" style="--score: 62%"><span></span></div>
-            <p>
-              通信、権限、資格情報、保護ファイルは強く制限。ただし資源上限、外部監視、復旧、
-              依存関係検証は完全には実装していない状態。
-            </p>
-          </article>
-          <article class="scorecard maximum">
-            <span class="tag green">比較用の最安全構成</span>
-            <strong class="score">100 <span>/ 100</span></strong>
-            <div class="meter" style="--score: 100%"><span></span></div>
-            <p>
-              使い捨て専用VM、完全オフライン、署名済み依存関係、資格情報なし、書き込みコピー、
-              資源上限、外部監視、復旧を組み合わせた基準。
-            </p>
-          </article>
-        </div>
-
-        <div class="table-wrap" style="margin-top: 1.25rem">
-          <table class="comparison current-score">
-            <thead>
-              <tr>
-                <th>比較項目</th>
-                <th>追加対策なし</th>
-                <th>現在のプロジェクト</th>
-                <th>比較用の最安全構成</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>外向き通信</td><td>0/10</td><td>8/10</td><td>10/10</td></tr>
-              <tr><td>ホスト・LAN操作</td><td>0/10</td><td>9/10</td><td>10/10</td></tr>
-              <tr><td>資格情報の分離</td><td>0/10</td><td>10/10</td><td>10/10</td></tr>
-              <tr><td>OS・管理権限の分離</td><td>0/10</td><td>10/10</td><td>10/10</td></tr>
-              <tr><td>ファイル保護</td><td>0/10</td><td>7/10</td><td>10/10</td></tr>
-              <tr><td>依存関係の内容検証</td><td>0/10</td><td>6/10</td><td>10/10</td></tr>
-              <tr><td>CPU・メモリ・PID制限</td><td>0/10</td><td>0/10</td><td>10/10</td></tr>
-              <tr><td>共有カーネルからの隔離</td><td>0/10</td><td>5/10</td><td>10/10</td></tr>
-              <tr><td>外部監視・監査</td><td>0/10</td><td>4/10</td><td>10/10</td></tr>
-              <tr><td>バックアップ・復旧</td><td>0/10</td><td>3/10</td><td>10/10</td></tr>
-              <tr><td><strong>合計</strong></td><td><strong>0/100</strong></td><td><strong>62/100</strong></td><td><strong>100/100</strong></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="callout" style="margin-top: 1rem">
-          <strong>62/100の読み方:</strong>
-          62%安全という意味ではなく、ここで定義した10項目の防御を現構成がどこまで実装しているかの比較値です。
-          まず資源上限、依存関係検査、バックアップの3点を加えると、日常開発を大きく難しくせず改善できます。
         </div>
       </section>
 
       <section id="start">
-        <h2>実際に起動する手順</h2>
-        <p class="lead">VS Codeでこのリポジトリを開き、Dev Containerで再度開くのが基本です。</p>
-        <ol class="flow">
-          <li>
-            <strong>Docker Desktopを起動</strong>
-            <p>Dockerが動いていないと、コンテナを作れません。</p>
-          </li>
-          <li>
-            <strong>VS Codeで「Reopen in Container」</strong>
-            <p><code>devcontainer.json</code> と <code>docker-compose.yml</code> の設定を読み込みます。</p>
-          </li>
-          <li>
-            <strong>依存関係を導入してゲームを起動</strong>
-            <div class="commands">
-              <pre>npm ci
+        <h2>ゲームの起動</h2>
+        <p class="lead">Docker Desktopを起動し、VS Codeで「Reopen in Container」を選択します。</p>
+        <div class="commands">
+          <pre>npm ci
 npm run dev</pre>
-            </div>
-          </li>
-          <li>
-            <strong>ブラウザーで確認</strong>
-            <p><a href="http://127.0.0.1:3000">http://127.0.0.1:3000</a> を開きます。</p>
-          </li>
-        </ol>
+        </div>
+        <p>
+          <a href="http://127.0.0.1:3000">http://127.0.0.1:3000</a> でゲームを確認できます。
+        </p>
       </section>
 
       <section>
-        <h2>設定ファイルの地図</h2>
+        <h2>安全性の位置づけ</h2>
         <div class="grid">
           <article class="card">
-            <h3><code>.devcontainer/devcontainer.json</code></h3>
-            <p>VS Codeが使うコンテナ、拡張、ターミナル、セキュリティ設定を決めます。</p>
+            <span class="tag orange">追加対策なし</span>
+            <strong class="score">0 <small>/ 100</small></strong>
+            <p>ホストで無制限に実行する基準状態。</p>
           </article>
           <article class="card">
-            <h3><code>.devcontainer/docker-compose.yml</code></h3>
-            <p>2つのコンテナ、ネットワーク、公開ポート、共有フォルダーを決めます。</p>
+            <span class="tag">現在の構成</span>
+            <strong class="score">71 <small>/ 100</small></strong>
+            <p>通信・権限・資格情報を重点的に分離した設計比較値。</p>
           </article>
           <article class="card">
-            <h3><code>.devcontainer/Dockerfile</code></h3>
-            <p>Node.jsやBubblewrapを含むコンテナの設計図です。</p>
+            <span class="tag green">より強い構成</span>
+            <strong class="score">100 <small>/ 100</small></strong>
+            <p>使い捨てVM、完全オフライン、署名検証、外部監視、復旧を含む基準。</p>
           </article>
-          <article class="card">
-            <h3><code>.devcontainer/egress-proxy.mjs</code></h3>
-            <p>外向きHTTPSとゲーム画面を中継するプロキシの実体です。</p>
-          </article>
-          <article class="card">
-            <h3><code>scripts/secure-run</code></h3>
-            <p>Bubblewrapでコマンドの見える範囲を小さくして実行します。</p>
-          </article>
-          <article class="card">
-            <h3><code>package.json</code></h3>
-            <p>Phaser、Vite、TypeScriptなどのアプリ部品と実行コマンドです。</p>
-          </article>
+        </div>
+        <div class="note" style="margin-top: 1rem">
+          <strong>点数の意味:</strong>
+          10項目の防御実装を比較する独自値であり、71%安全や絶対的な安全性を示すものではありません。
+          詳細な採点根拠、できないこと、制限緩和時のリスクは
+          <a href="./security-details.html">詳細セキュリティ資料</a>へ分離しています。
         </div>
       </section>
     </main>
 
     <footer>
-      Secure Phaser Template — コンテナ構成ガイド<br />
-      <a href="https://github.com/govinda246/template-project">GitHubリポジトリを見る</a>
+      Secure Phaser Template — 初心者向け概要<br />
+      <a href="./security-details.html">詳細セキュリティ資料</a>
+      ・
+      <a href="https://github.com/govinda246/template-project">GitHubリポジトリ</a>
     </footer>
   </body>
 </html>
