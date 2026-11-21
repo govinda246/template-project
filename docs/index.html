@@ -373,15 +373,46 @@
       </section>
 
       <section id="start">
-        <h2>ゲームの起動</h2>
-        <p class="lead">Docker Desktopを起動し、VS Codeで「Reopen in Container」を選択します。</p>
-        <div class="commands">
-          <pre>npm ci
-npm run dev</pre>
-        </div>
-        <p>
-          <a href="http://127.0.0.1:3000">http://127.0.0.1:3000</a> でゲームを確認できます。
+        <h2>目的別の起動・再構築手順</h2>
+        <p class="lead">
+          ゲームを起動するだけなのか、Dockerなどの設定を変更したのかで操作が異なります。
         </p>
+        <div class="grid two">
+          <article class="card">
+            <span class="tag">初回・普段のゲーム起動</span>
+            <ol>
+              <li>Docker Desktopを起動</li>
+              <li>VS Codeでリポジトリを開く</li>
+              <li>「Reopen in Container」を選ぶ</li>
+              <li>コンテナ内ターミナルで下記を実行</li>
+            </ol>
+            <div class="commands">
+              <pre>npm ci
+npm run dev</pre>
+            </div>
+            <p>
+              <a href="http://127.0.0.1:3000">http://127.0.0.1:3000</a> を開きます。
+              <code>npm ci</code> は初回または依存関係変更後だけで構いません。
+            </p>
+          </article>
+          <article class="card">
+            <span class="tag orange">コンテナ設定を変更した後</span>
+            <p>
+              <code>.devcontainer</code>、Dockerfile、Compose、allowlist、secure-runなどを変更した場合は、
+              VS Codeの「Dev Containers: Rebuild Container」を実行します。
+              この操作はゲーム起動とは別で、コンテナの設計変更を反映する手順です。
+            </p>
+            <div class="commands">
+              <pre>bash scripts/verify-security.sh</pre>
+            </div>
+            <p>再構築後にセキュリティ検証を実行し、その後<code>npm run dev</code>でゲームを確認します。</p>
+          </article>
+        </div>
+        <div class="note" style="margin-top: 1rem">
+          <strong>判断の目安:</strong>
+          <code>src</code> やゲームコードだけを変更した場合は再構築不要です。
+          Docker・ネットワーク・VS Code設定・allowlist・セキュリティスクリプトを変更した場合は再構築が必要です。
+        </div>
       </section>
 
       <section>
