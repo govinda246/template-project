@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-exec /bin/bash "$project_root/scripts/secure-run" /bin/bash --noprofile --norc
+exec /opt/secure-template/secure-run /bin/bash --noprofile --norc

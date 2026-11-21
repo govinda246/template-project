@@ -50,20 +50,20 @@ devコンテナから直接インターネットへ出るdefault routeはあり�
 
 - PID/IPC/UTS/user namespace分離
 - `/usr`、`/etc`、`/opt`などの必要なシステム領域を読み取り専用でbind
-- プロジェクトだけを書き込み可能
+- プロジェクトは原則として書き込み可能。ただし`.git`、`.devcontainer`、`.github`、`.vscode`、`scripts`は読み取り専用
 - `$HOME`を空のtmpfsへ置換
 - ホスト資格情報やDocker socketをマウントしない
-- `docker`、`sudo`、`mount`、`nsenter`などの直接実行を拒否
+- `copilot`、`gh copilot`、`npx`/`npm exec`によるGitHub Copilot CLI起動、`docker`、`sudo`、`mount`、`nsenter`などの実行を拒否
 - `--offline`指定時はネットワークnamespaceも分離
 
 初期ターミナルはセキュアシェルです。通常ターミナルの代わりに入力するコマンドはすでにBubblewrap内です。明示的に単発実行する場合は次の形を使います。
 
 ```sh
-bash scripts/secure-run npm run typecheck
-bash scripts/secure-run --offline node -e "console.log('offline')"
+/opt/secure-template/secure-run npm run typecheck
+/opt/secure-template/secure-run --offline node -e "console.log('offline')"
 ```
 
-コマンド名ブラックリストは利便性のための層であり、Docker socket非公開、capability除去、ファイル権限、ネットワーク分離が主たる防御です。
+信頼される`secure-run`と`secure-shell`はイメージ生成時にroot所有で`/opt/secure-template`へ配置されます。VS CodeとCopilotはワークスペース内の同名ファイルを実行しません。コマンド名ブラックリストは利便性のための層であり、Docker socket非公開、capability除去、ファイル権限、ネットワーク分離が主たる防御です。
 
 ## 開始
 

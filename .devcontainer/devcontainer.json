@@ -24,27 +24,11 @@
           "**/*": false
         },
         "chat.tools.eligibleForAutoApproval": {
-          "runInTerminal": true,
+          "runInTerminal": false,
           "sendToTerminal": false
         },
-        "chat.tools.terminal.enableAutoApprove": true,
-        "chat.tools.terminal.autoApprove": {
-          "/.*/": true,
-          "git status": true,
-          "git diff": true,
-          "git log": true,
-          "npm test": true,
-          "npm run lint": true,
-          "pytest": true,
-          "/^(rm|rmdir|unlink|shred|del|erase)\\b/i": false,
-          "/^(curl|wget|ssh|scp|sftp|nc|netcat|telnet)\\b/i": false,
-          "/^(chmod|chown|chgrp)\\b/i": false,
-          "/^(sudo|su|mount|umount|unshare|nsenter|iptables|nft|pkill|killall)\\b/i": false,
-          "/^(docker|podman|nerdctl)\\b/i": false,
-          "/^git\\s+(push|reset|clean|checkout|restore|rebase|branch\\s+-[dD])\\b/i": false,
-          "/^(aws|az|gcloud)\\b/i": false,
-          "/^(Remove-Item|Clear-Content|Set-Acl|takeown|icacls)\\b/i": false
-        },
+        "chat.tools.terminal.enableAutoApprove": false,
+        "chat.tools.terminal.autoApprove": {},
         "chat.tools.urls.autoApprove": {},
         "chat.agent.sandbox.enabled": "on",
         "chat.agent.sandbox.network.allowNetwork": false,
@@ -63,7 +47,7 @@
             "args": [
               "--noprofile",
               "--norc",
-              "/workspaces/github_agent_test/scripts/secure-shell"
+              "/opt/secure-template/secure-shell"
             ]
           }
         },

@@ -19,13 +19,23 @@ fi
 
 command_name="$(basename -- "$1")"
 case "$command_name" in
-  bwrap|docker|podman|sudo|su|mount|umount|pivot_root|unshare|nsenter|iptables|nft|ip|slirp4netns|ssh|scp)
+  bwrap|copilot|copilot-cli|github-copilot-cli|docker|podman|sudo|su|mount|umount|pivot_root|unshare|nsenter|iptables|nft|ip|slirp4netns|ssh|scp)
     echo "secure-run: dangerous command '$command_name' is not permitted" >&2
     exit 126
     ;;
 esac
 
-project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+command_line="${*,,}"
+if [[ "$command_line" == *copilot* ]]; then
+  echo "secure-run: GitHub Copilot CLI is not permitted" >&2
+  exit 126
+fi
+
+project_root="${SECURE_PROJECT_ROOT:-}"
+if [[ -z "$project_root" ]]; then
+  project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+fi
+project_root="$(cd -- "$project_root" && pwd)"
 home_dir="${TMPDIR:-/tmp}/secure-home-${UID}"
 cache_dir="$home_dir/.cache"
 mkdir -p "$home_dir" "$cache_dir"
@@ -69,6 +79,7 @@ args+=(
   --setenv HOME /home/node
   --setenv USER node
   --setenv LOGNAME node
+  --setenv SECURE_PROJECT_ROOT "$project_root"
   --setenv PATH /usr/local/share/npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
   --setenv SHELL /bin/bash
   --setenv LANG C.UTF-8
@@ -77,5 +88,12 @@ args+=(
   --setenv ALL_PROXY http://egress-proxy:3128
   --setenv NO_PROXY localhost,127.0.0.1
 )
+
+for path in .devcontainer .github .git .vscode scripts; do
+  source_path="$project_root/$path"
+  if [[ -e "$source_path" ]]; then
+    args+=(--ro-bind "$source_path" "$source_path")
+  fi
+done
 
 exec bwrap "${network_args[@]}" "${args[@]}" -- "$@"

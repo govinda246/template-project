@@ -4,32 +4,32 @@
     {
       "label": "secure: typecheck",
       "type": "shell",
-      "command": "/bin/bash",
-      "args": ["${workspaceFolder}/scripts/secure-run", "npm", "run", "typecheck"],
+      "command": "/opt/secure-template/secure-run",
+      "args": ["npm", "run", "typecheck"],
       "group": "build",
       "problemMatcher": "$tsc"
     },
     {
       "label": "secure: test",
       "type": "shell",
-      "command": "/bin/bash",
-      "args": ["${workspaceFolder}/scripts/secure-run", "npm", "test"],
+      "command": "/opt/secure-template/secure-run",
+      "args": ["npm", "test"],
       "group": "test",
       "problemMatcher": []
     },
     {
       "label": "secure: build",
       "type": "shell",
-      "command": "/bin/bash",
-      "args": ["${workspaceFolder}/scripts/secure-run", "npm", "run", "build"],
+      "command": "/opt/secure-template/secure-run",
+      "args": ["npm", "run", "build"],
       "group": "build",
       "problemMatcher": []
     },
     {
       "label": "secure: dev server",
       "type": "shell",
-      "command": "/bin/bash",
-      "args": ["${workspaceFolder}/scripts/secure-run", "npm", "run", "dev"],
+      "command": "/opt/secure-template/secure-run",
+      "args": ["npm", "run", "dev"],
       "isBackground": true,
       "problemMatcher": {
         "owner": "custom",

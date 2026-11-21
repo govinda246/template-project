@@ -16,13 +16,19 @@ RUN apt-get update \
     && test "$(node --version)" = "v${EXPECTED_NODE_VERSION}" \
     && test "$(npm --version)" = "${EXPECTED_NPM_VERSION}" \
     && mkdir -p /home/node/.vscode-server/data/User/workspaceStorage /opt/secure-template \
-    && chown -R node:node /home/node/.vscode-server /opt/secure-template
+    && chown -R node:node /home/node/.vscode-server
 
-COPY --chown=node:node .devcontainer/egress-proxy.mjs .devcontainer/egress-allowlist.txt /opt/secure-template/
+COPY --chown=root:root .devcontainer/egress-proxy.mjs .devcontainer/egress-allowlist.txt /opt/secure-template/
+COPY --chown=root:root --chmod=0755 scripts/secure-run scripts/secure-shell /opt/secure-template/
+
+RUN chown -R root:root /opt/secure-template \
+    && chmod 0755 /opt/secure-template \
+    && chmod 0644 /opt/secure-template/egress-proxy.mjs /opt/secure-template/egress-allowlist.txt
 
 ENV HTTP_PROXY=http://egress-proxy:3128
 ENV HTTPS_PROXY=http://egress-proxy:3128
 ENV ALL_PROXY=http://egress-proxy:3128
 ENV NO_PROXY=localhost,127.0.0.1
+ENV SECURE_PROJECT_ROOT=/workspaces/github_agent_test
 
 USER node
