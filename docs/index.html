@@ -425,6 +425,87 @@
         font-size: 0.9rem;
       }
 
+      .scorecards {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .scorecard {
+        padding: 1.2rem;
+        border: 1px solid var(--line);
+        border-radius: 0.9rem;
+        background: #fbfcff;
+      }
+
+      .scorecard.current {
+        border-color: #6fa9ff;
+        background: var(--blue-soft);
+      }
+
+      .scorecard.maximum {
+        border-color: #65bfa0;
+        background: var(--green-soft);
+      }
+
+      .score {
+        display: block;
+        margin: 0.15rem 0 0.35rem;
+        font-size: 2.65rem;
+        font-weight: 850;
+        letter-spacing: -0.05em;
+        line-height: 1;
+      }
+
+      .score span {
+        color: var(--muted);
+        font-size: 0.92rem;
+        font-weight: 600;
+        letter-spacing: 0;
+      }
+
+      .meter {
+        height: 0.55rem;
+        margin: 0.8rem 0;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #dfe5ef;
+      }
+
+      .meter span {
+        display: block;
+        width: var(--score);
+        height: 100%;
+        border-radius: inherit;
+        background: var(--blue);
+      }
+
+      .scorecard.maximum .meter span {
+        background: var(--green);
+      }
+
+      .priority {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.75rem;
+        align-items: start;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .priority:last-child {
+        border-bottom: 0;
+      }
+
+      .priority strong {
+        display: block;
+      }
+
+      .priority p {
+        margin: 0.15rem 0 0;
+        color: var(--muted);
+      }
+
       .commands {
         overflow-x: auto;
         padding: 1rem 1.2rem;
@@ -488,6 +569,7 @@
 
         .grid,
         .risk-scale,
+        .scorecards,
         .grid.two,
         .diagram {
           grid-template-columns: 1fr;
@@ -632,6 +714,22 @@
           content: "追加の対策";
         }
 
+        .comparison.current-score td:first-child::before {
+          content: "比較項目";
+        }
+
+        .comparison.current-score td:nth-child(2)::before {
+          content: "追加対策なし";
+        }
+
+        .comparison.current-score td:nth-child(3)::before {
+          content: "現在のプロジェクト";
+        }
+
+        .comparison.current-score td:nth-child(4)::before {
+          content: "比較用の最安全構成";
+        }
+
         .commands pre {
           font-size: 0.82rem;
         }
@@ -655,6 +753,7 @@
           <a href="#limits">制限と理由</a>
           <a href="#relaxation">緩め方</a>
           <a href="#not-protected">防げない問題</a>
+          <a href="#improvements">安全性を高める</a>
           <a href="#start">起動方法</a>
         </nav>
       </div>
@@ -1204,6 +1303,127 @@
           プロジェクト内コードの侵害を減らすことを主目的とします。
           非常に危険なマルウェア解析、秘密情報を扱う作業、敵対的な本番管理には、
           更新済みの専用VMやハードウェア隔離された管理端末が必要です。
+        </div>
+      </section>
+
+      <section id="improvements">
+        <h2>より安全にするための方針</h2>
+        <p class="lead">
+          このプロジェクトでは、日常のゲーム開発に必要な利便性を保つため全てを採用していません。
+          ただし、重要な作業では次のより強い構成を選べます。
+        </p>
+
+        <div class="grid two">
+          <article class="card">
+            <span class="tag green">簡単に追加しやすい対策</span>
+            <div class="priority">
+              <span class="tag blue">1</span>
+              <div>
+                <strong>資源上限を設定</strong>
+                <p>CPU・メモリ・PID・ログ容量の上限をComposeに追加し、暴走によるホスト停止を防ぎます。</p>
+              </div>
+            </div>
+            <div class="priority">
+              <span class="tag blue">2</span>
+              <div>
+                <strong>依存関係を自動検査</strong>
+                <p>npm audit、Dependabot、Secret scanning、SBOM生成をCIへ追加し、弱点と秘密の混入を早期検出します。</p>
+              </div>
+            </div>
+            <div class="priority">
+              <span class="tag blue">3</span>
+              <div>
+                <strong>変更前バックアップ</strong>
+                <p>変更前スナップショットやリモートバックアップを作り、開発ファイル破壊からの復旧時間を短くします。</p>
+              </div>
+            </div>
+            <div class="priority">
+              <span class="tag blue">4</span>
+              <div>
+                <strong>ネットワークの一時無効化</strong>
+                <p>外部通信不要のビルド・テストでは <code>--offline</code> を使い、接続可能時間を最小化します。</p>
+              </div>
+            </div>
+          </article>
+          <article class="card">
+            <span class="tag orange">このプロジェクトでは採用していない、より強い方法</span>
+            <ul>
+              <li>開発ごとに使い捨ての専用VMを作り、作業後に破棄</li>
+              <li>完全オフライン環境で事前承認済み依存関係だけを使用</li>
+              <li>共有フォルダーではなく、読み取り専用コピーと成果物だけを受け渡し</li>
+              <li>資格情報のない物理的・管理的に分離した端末で公開操作</li>
+              <li>ネットワーク、ファイル、プロセスのログを外部監視基盤へ送信</li>
+              <li>CIで署名済み成果物だけをデプロイし、内容・出所を検証</li>
+            </ul>
+            <p>
+              これらはより強い隔離を提供しますが、起動時間、操作手順、更新管理、
+              ハードウェア・運用コストが増えるため、通常のブラウザーゲーム開発には未採用です。
+            </p>
+          </article>
+        </div>
+
+        <h3 style="margin-top: 1.5rem">最安全な構成との相対比較</h3>
+        <p class="lead">
+          下表は10項目を各10点で評価する、このガイド独自の「設計比較スコア」です。
+          公的なセキュリティ評価ではなく、未知の脆弱性や運用ミスを含む絶対保証でもありません。
+          「追加対策なし」は追加防御を0点とした基準であり、OSやGitHubが備える標準防御までは0点ではありません。
+        </p>
+        <div class="scorecards">
+          <article class="scorecard">
+            <span class="tag orange">追加対策なし</span>
+            <strong class="score">0 <span>/ 100</span></strong>
+            <div class="meter" style="--score: 0%"><span></span></div>
+            <p>ホスト上で自由に実行し、追加の隔離・資格情報分離・通信制限・復旧策を用意しない基準状態。</p>
+          </article>
+          <article class="scorecard current">
+            <span class="tag blue">現在のプロジェクト</span>
+            <strong class="score">62 <span>/ 100</span></strong>
+            <div class="meter" style="--score: 62%"><span></span></div>
+            <p>
+              通信、権限、資格情報、保護ファイルは強く制限。ただし資源上限、外部監視、復旧、
+              依存関係検証は完全には実装していない状態。
+            </p>
+          </article>
+          <article class="scorecard maximum">
+            <span class="tag green">比較用の最安全構成</span>
+            <strong class="score">100 <span>/ 100</span></strong>
+            <div class="meter" style="--score: 100%"><span></span></div>
+            <p>
+              使い捨て専用VM、完全オフライン、署名済み依存関係、資格情報なし、書き込みコピー、
+              資源上限、外部監視、復旧を組み合わせた基準。
+            </p>
+          </article>
+        </div>
+
+        <div class="table-wrap" style="margin-top: 1.25rem">
+          <table class="comparison current-score">
+            <thead>
+              <tr>
+                <th>比較項目</th>
+                <th>追加対策なし</th>
+                <th>現在のプロジェクト</th>
+                <th>比較用の最安全構成</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>外向き通信</td><td>0/10</td><td>8/10</td><td>10/10</td></tr>
+              <tr><td>ホスト・LAN操作</td><td>0/10</td><td>9/10</td><td>10/10</td></tr>
+              <tr><td>資格情報の分離</td><td>0/10</td><td>10/10</td><td>10/10</td></tr>
+              <tr><td>OS・管理権限の分離</td><td>0/10</td><td>10/10</td><td>10/10</td></tr>
+              <tr><td>ファイル保護</td><td>0/10</td><td>7/10</td><td>10/10</td></tr>
+              <tr><td>依存関係の内容検証</td><td>0/10</td><td>6/10</td><td>10/10</td></tr>
+              <tr><td>CPU・メモリ・PID制限</td><td>0/10</td><td>0/10</td><td>10/10</td></tr>
+              <tr><td>共有カーネルからの隔離</td><td>0/10</td><td>5/10</td><td>10/10</td></tr>
+              <tr><td>外部監視・監査</td><td>0/10</td><td>4/10</td><td>10/10</td></tr>
+              <tr><td>バックアップ・復旧</td><td>0/10</td><td>3/10</td><td>10/10</td></tr>
+              <tr><td><strong>合計</strong></td><td><strong>0/100</strong></td><td><strong>62/100</strong></td><td><strong>100/100</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout" style="margin-top: 1rem">
+          <strong>62/100の読み方:</strong>
+          62%安全という意味ではなく、ここで定義した10項目の防御を現構成がどこまで実装しているかの比較値です。
+          まず資源上限、依存関係検査、バックアップの3点を加えると、日常開発を大きく難しくせず改善できます。
         </div>
       </section>
 
