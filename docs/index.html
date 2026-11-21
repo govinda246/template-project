@@ -568,7 +568,7 @@
         }
 
         .comparison td:nth-child(3)::before {
-          content: "判断・利便性";
+          content: "防御区分・利便性";
         }
 
         .comparison td:nth-child(4)::before {
@@ -576,7 +576,7 @@
         }
 
         .comparison td:nth-child(5)::before {
-          content: "判断";
+          content: "リスク";
         }
 
         .comparison.limits td:first-child::before {
@@ -588,7 +588,7 @@
         }
 
         .comparison.limits td:nth-child(3)::before {
-          content: "評価";
+          content: "防御区分";
         }
 
         .comparison.limits td:nth-child(4)::before {
@@ -669,7 +669,7 @@
         </p>
         <div class="diagram" aria-label="コンテナ構成図">
           <div class="node browser">
-            <span class="tag blue">あなたのPC</span>
+            <span class="tag blue">ローカルPC</span>
             <h3>ブラウザーとVS Code</h3>
             <p>ゲーム表示: <code>127.0.0.1:3000</code><br />ソースコード編集: VS Code</p>
           </div>
@@ -837,7 +837,7 @@
         <h2>安全性のためにできないことと、その正当性</h2>
         <p class="lead">
           制限には「主要防御」「条件付きで必要」「補助的な事故防止」の違いがあります。
-          補助策を完全な防御だと考えず、それぞれの役割を明記します。
+          補助策は完全な防御ではなく、各制限の役割と位置づけを区別します。
         </p>
         <div class="table-wrap">
           <table class="comparison limits">
@@ -845,7 +845,7 @@
               <tr>
                 <th>できないこと</th>
                 <th>安全上の理由</th>
-                <th>評価</th>
+                <th>防御区分</th>
                 <th>代替・注意点</th>
               </tr>
             </thead>
@@ -856,7 +856,7 @@
                   ソースコードや資格情報の持ち出しと、悪意ある実行ファイルの取得を減らします。
                   平文HTTPや443番以外も中継しません。
                 </td>
-                <td><span class="verdict keep">維持</span></td>
+                <td><span class="verdict keep">主要防御</span></td>
                 <td>
                   必要なホストを完全一致で確認して
                   <code>egress-allowlist.txt</code> に追加します。
@@ -868,7 +868,7 @@
                   コンテナからホストや家庭内・会社内機器を探索・操作されないようにします。
                   <code>localhost:3000</code> は公開されたゲーム入口に限られます。
                 </td>
-                <td><span class="verdict keep">維持</span></td>
+                <td><span class="verdict keep">主要防御</span></td>
                 <td>連携が必要なら、必要なAPIだけを明示的な窓口として設計します。</td>
               </tr>
               <tr>
@@ -877,7 +877,7 @@
                   Docker socketはマウントせず、全capabilityを外し、特権モードも使いません。
                   これを変えるとコンテナ隔離そのものが弱くなります。
                 </td>
-                <td><span class="verdict keep">維持</span></td>
+                <td><span class="verdict keep">主要防御</span></td>
                 <td>管理操作はコンテナ外で人が実行します。名前による拒否は補助策です。</td>
               </tr>
               <tr>
@@ -886,7 +886,7 @@
                   SSHは22番などの未許可ポートで接続でき、ホスト鍵や外部秘密鍵も渡されません。
                   任意サーバーを新しい通信経路にしないためです。
                 </td>
-                <td><span class="verdict keep">維持</span></td>
+                <td><span class="verdict keep">主要防御</span></td>
                 <td>pushや管理はホスト側で確認して行います。</td>
               </tr>
               <tr>
@@ -894,7 +894,7 @@
                 <td>
                   侵害された依存関係や実行コマンドが、リポジトリやクラウドへ認証済み操作を行うことを防ぎます。
                 </td>
-                <td><span class="verdict keep">維持</span></td>
+                <td><span class="verdict keep">主要防御</span></td>
                 <td>必要なときだけホスト側で認証し、短命なトークンを使います。</td>
               </tr>
               <tr>
@@ -902,7 +902,7 @@
                 <td>
                   エージェントが自身の制限、CI、信頼スクリプトを同じ実行中に書き換える経路を防ぎます。
                 </td>
-                <td><span class="verdict keep">維持</span></td>
+                <td><span class="verdict keep">主要防御</span></td>
                 <td>
                   人が差分をレビューし、変更後に<code>Dev Containers: Rebuild Container</code>で再確認します。
                 </td>
@@ -913,7 +913,7 @@
                   監督のない入れ子実行と、レビュー前の危険な操作を減らします。
                   ただしコマンド名検査は回避可能なので主要防御ではありません。
                 </td>
-                <td><span class="verdict supporting">補助</span></td>
+                <td><span class="verdict supporting">補助防御</span></td>
                 <td>
                   VS Codeの手動承認付きAgent、ネットワーク分離、資格情報非継承が本体の防御です。
                 </td>
@@ -924,7 +924,7 @@
                   許可リストは通信先を絞るだけで、npmパッケージやGitHub上のコード自体が安全とは保証しません。
                   依存関係スクリプトは通常コマンド権限で動きます。
                 </td>
-                <td><span class="verdict conditional">注意</span></td>
+                <td><span class="verdict conditional">別途対策</span></td>
                 <td>
                   lockfile、バージョン固定、差分レビュー、npmスクリプト確認、必要なら
                   <code>npm ci --ignore-scripts</code> を使います。
@@ -934,9 +934,9 @@
           </table>
         </div>
         <div class="callout" style="margin-top: 1rem">
-          <strong>精査結果:</strong>
-          主要な制限は、セキュリティ上の目的と実際の防御が一致しています。
-          一方、特定コマンド名を弾く方式は「うっかり防止」までで、完全な防御とは扱わないべきです。
+          <strong>設計上の位置づけ:</strong>
+          主要な制限は、セキュリティ上の目的と実際の防御に対応しています。
+          一方、特定コマンド名を弾く方式は事故防止の補助策であり、完全な防御ではありません。
           また、許可したGitHubやnpmのホスト名から流れるコードは安全性を保証されないため、
           通信制限だけでなく依存関係のレビューが必要です。
         </div>
@@ -946,7 +946,7 @@
         <h2>利便性のために制限を緩める方法</h2>
         <p class="lead">
           いきなり全制限を解除するのではなく、目的ごとに最小限だけ緩めます。
-          特に「許可した通信先」と「与えた資格情報」は別々に管理してください。
+          特に「許可した通信先」と「与えた資格情報」は別々に管理します。
         </p>
         <div class="risk-scale" aria-label="制限緩和のリスク段階">
           <article class="risk-step">
@@ -962,7 +962,7 @@
           <article class="risk-step">
             <span class="tag orange">段階3・高</span>
             <h3>資格情報を渡す</h3>
-            <p>短命トークンや限定権限だけに絞り、利用後に消してください。</p>
+            <p>短命トークンや限定権限だけに絞り、利用後に削除します。</p>
           </article>
           <article class="risk-step">
             <span class="tag orange">段階4・重大</span>
@@ -979,7 +979,7 @@
                 <th>最小限の緩め方</th>
                 <th>増える利便性</th>
                 <th>主なリスク</th>
-                <th>判断</th>
+                <th>リスク</th>
               </tr>
             </thead>
             <tbody>
@@ -1010,7 +1010,7 @@
               <tr>
                 <td>GitHub pushを容器内でも使う</td>
                 <td>
-                  まずは別にホスト側pushを維持。必要なら期限・対象リポジトリ・権限を限定した
+                  標準手順ではホスト側pushを使用。必要な場合は期限・対象リポジトリ・権限を限定した
                   fine-grained tokenを一時的に渡す。
                   長期的な個人トークンやSSH秘密鍵は渡さない。
                 </td>
@@ -1082,10 +1082,10 @@
           </article>
         </div>
         <div class="callout" style="margin-top: 1rem">
-          <strong>判断の原則:</strong>
+          <strong>緩和方針:</strong>
           「できることを増やす」より「今回必要な1機能だけを期限付きで許可する」方が安全です。
           緩和後もネットワーク、資格情報、ファイル、Docker権限は別々に見直し、
-          1つを緩めたら他の層はそのまま維持します。
+          1つを緩めても他の層は変更しません。
         </div>
       </section>
 
@@ -1202,8 +1202,8 @@
           <strong>この環境の前提:</strong>
           ホストOS、Docker、VS Code、実行イメージは信頼し、通常の開発者の誤操作と
           プロジェクト内コードの侵害を減らすことを主目的とします。
-          逆に、非常に危険なマルウェア解析、秘密情報を扱う作業、敵対的な本番管理には、
-          更新済みの専用VMやハードウェア隔離された管理端末を使用してください。
+          非常に危険なマルウェア解析、秘密情報を扱う作業、敵対的な本番管理には、
+          更新済みの専用VMやハードウェア隔離された管理端末が必要です。
         </div>
       </section>
 
