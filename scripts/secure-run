@@ -8,6 +8,7 @@ fi
 
 network_args=()
 if [[ ${1:-} == "--offline" ]]; then
+  # 外部通信が不要なコマンドでは、proxyを使わずnetwork namespaceごと切り離す。
   network_args=(--unshare-net)
   shift
 fi
@@ -18,6 +19,7 @@ if [[ $# -eq 0 ]]; then
 fi
 
 command_name="$(basename -- "$1")"
+# コマンド名拒否は誤操作を減らす補助策。主要防御はsocket非公開・権限・mount・network分離。
 case "$command_name" in
   bwrap|copilot|copilot-cli|github-copilot-cli|docker|podman|sudo|su|mount|umount|pivot_root|unshare|nsenter|iptables|nft|ip|slirp4netns|ssh|scp)
     echo "secure-run: dangerous command '$command_name' is not permitted" >&2
@@ -36,6 +38,7 @@ if [[ -z "$project_root" ]]; then
   project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 fi
 project_root="$(cd -- "$project_root" && pwd)"
+# HOMEを空にし、npm等が必要とするcacheだけを明示的な一時領域へbindする。
 home_dir="${TMPDIR:-/tmp}/secure-home-${UID}"
 cache_dir="$home_dir/.cache"
 mkdir -p "$home_dir" "$cache_dir"
@@ -51,6 +54,7 @@ readonly_dirs=(
 )
 
 args=(
+  # 親と同一セッションのままにせず、プロセス・IPC・hostnameを分離する。
   --die-with-parent
   --new-session
   --unshare-user
@@ -83,6 +87,7 @@ args+=(
   --setenv PATH /usr/local/share/npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
   --setenv SHELL /bin/bash
   --setenv LANG C.UTF-8
+  # 通常の外向き通信はallowlist付きegress proxyへ向ける。
   --setenv HTTP_PROXY http://egress-proxy:3128
   --setenv HTTPS_PROXY http://egress-proxy:3128
   --setenv ALL_PROXY http://egress-proxy:3128
@@ -90,6 +95,7 @@ args+=(
 )
 
 for path in .devcontainer .github .git .vscode scripts; do
+  # Agentがガードレール、CI、信頼script、Git履歴を同じセッション内で変更しないよう再bindする。
   source_path="$project_root/$path"
   if [[ -e "$source_path" ]]; then
     args+=(--ro-bind "$source_path" "$source_path")

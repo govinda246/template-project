@@ -9,6 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  # 読み取りと監査結果の実行だけに必要な権限へ限定する。
   contents: read
 
 concurrency:
@@ -20,10 +21,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
+        # タグではなくcommit SHA固定でAction内容の追従変更を防ぐ。
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Install dependencies without lifecycle scripts
+        # 取得パッケージのinstall scriptは先に実行せず、lockfileから導入する。
         run: npm ci --ignore-scripts
       - name: Audit production dependencies
+        # High以上の本番脆弱性を検知。dev依存は対象外なので別途確認する。
         run: npm audit --omit=dev --audit-level=high
       - name: Verify lockfile
         run: npm ci --ignore-scripts

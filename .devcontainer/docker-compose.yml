@@ -2,6 +2,7 @@ name: secure-phaser-template
 
 services:
   devcontainer:
+    # ゲーム開発を行う実行コンテナ。sandboxだけに接続し、外部への直接経路を持たない。
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
@@ -9,16 +10,19 @@ services:
     init: true
     user: node
     volumes:
+      # workspaceは開発に必要なためbindする。秘密情報はこのフォルダーへ置かない。
       - ..:/workspaces/github_agent_test:cached
       - agent-session-history:/home/node/.vscode-server/data/User/workspaceStorage
     networks:
       - sandbox
     security_opt:
+      # capability除去だけでなく、特権化と機密syscallを抑える。
       - no-new-privileges:true
       - seccomp=./bubblewrap-seccomp.json
     cap_drop:
       - ALL
     cpus: "2.0"
+    # ここで資源上限を設け、命令単位の制限だけでなく暴走時の影響をDocker側でも抑える。
     mem_limit: 4g
     pids_limit: 512
     logging:
@@ -27,9 +31,11 @@ services:
         max-size: "10m"
         max-file: "3"
     devices:
+      # Bubblewrap/slirp4netnsのnetwork namespace利用に必要。必要性を変えた場合は再評価する。
       - /dev/net/tun:/dev/net/tun
 
   egress-proxy:
+    # sandboxとegressを結ぶ唯一の境界。外向き接続と3000番の中継だけを担当する。
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
@@ -42,12 +48,14 @@ services:
     tmpfs:
       - /tmp
     networks:
+      # devcontainerから外部へ直接出ず、この2ネットワークをまたぐproxyだけが通信を中継する。
       - sandbox
       - egress
     expose:
       - "3128"
       - "3000"
     ports:
+      # ホスト全体ではなくloopbackだけへ公開し、LANからの直接接続を避ける。
       - "127.0.0.1:3000:3000"
     environment:
       FRONTEND_PROXY_TARGET: devcontainer
@@ -69,6 +77,7 @@ volumes:
   agent-session-history:
 
 networks:
+  # internal networkにはインターネット向けdefault routeが作られない。
   sandbox:
     internal: true
   egress: {}

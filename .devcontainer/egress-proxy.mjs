@@ -31,11 +31,13 @@ export function parseConnectTarget(request) {
 }
 
 export function isAllowed(target, allowedHosts) {
+  // hostnameは完全一致、portは443だけ。サブドメインや平文HTTPを暗黙許可しない。
   return target.port === 443 && allowedHosts.has(target.hostname);
 }
 
 export function createEgressProxy(allowedHosts) {
   const server = createServer((_request, response) => {
+    // 通常HTTPではforward proxyとして働かず、HTTPS CONNECTだけを受け付ける。
     response.writeHead(405, { connection: 'close' });
     response.end('Only HTTPS CONNECT requests are allowed.\n');
   });
@@ -47,6 +49,7 @@ export function createEgressProxy(allowedHosts) {
       return;
     }
 
+    // 許可済みhostnameへのTLSトンネル。内容は復号・検査しないため内容安全性は保証しない。
     const upstream = connect(target.port, target.hostname);
     const connectTimeout = setTimeout(() => {
       upstream.destroy(new Error('Upstream connection timed out'));
@@ -80,6 +83,7 @@ export function createEgressProxy(allowedHosts) {
 }
 
 export function createFrontendProxy(hostname, port) {
+  // ブラウザーからの3000番をsandbox内Viteへ中継する。外部公開先とは別の入口。
   const server = createServer((request, response) => {
     const upstream = httpRequest(
       {
@@ -139,6 +143,7 @@ if (isMain) {
   const allowlistPath = process.env.ALLOWLIST_FILE ?? DEFAULT_ALLOWLIST_PATH;
   const allowedHosts = parseAllowlist(readFileSync(allowlistPath, 'utf8'));
   if (allowedHosts.size === 0) {
+    // 空のallowlistを「全許可」と解釈しない。
     throw new Error(`Refusing to start with an empty allowlist: ${allowlistPath}`);
   }
 

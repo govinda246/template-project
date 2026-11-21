@@ -1,4 +1,5 @@
 {
+  // VS Codeから接続する2コンテナ構成。Compose側の隔離・資源制限も同時に読み込む。
   "name": "Secure Phaser Dev Container",
   "dockerComposeFile": "docker-compose.yml",
   "service": "devcontainer",
@@ -14,6 +15,7 @@
         "esbenp.prettier-vscode@12.4.0"
       ],
       "settings": {
+        // Agent操作は全て手動承認。端末・編集・URLへ暗黙に実行権限を与えない。
         "chat.defaultConfiguration": {
           "mode": "interactive",
           "approvals": "manual"
@@ -31,6 +33,7 @@
         "chat.tools.terminal.autoApprove": {},
         "chat.tools.urls.autoApprove": {},
         "chat.agent.sandbox.enabled": "on",
+        // Agent自身には外部・LAN・資格情報・ホスト開発ツールを公開しない。
         "chat.agent.sandbox.network.allowNetwork": false,
         "chat.agent.sandbox.network.allowLocalNetwork": false,
         "chat.agent.sandbox.fileSystem.allowDevToolAccess": false,
@@ -40,6 +43,7 @@
         "chat.agent.sandbox.mcpServers": true,
         "chat.agent.sandbox.lspServers": true,
         "chat.sessionSync.enabled": false,
+        // workspace内scriptではなく、イメージ生成時にroot所有で配置した信頼済み入口を使う。
         "terminal.integrated.defaultProfile.linux": "Secure shell",
         "terminal.integrated.profiles.linux": {
           "Secure shell": {
