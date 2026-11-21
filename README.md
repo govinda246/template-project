@@ -168,6 +168,19 @@ npm run build
 6. 必要なら共有Agentサブモジュールを追加して別コミットします。
 7. 新リポジトリへpushします。
 
+利用時のcloneでは、サブモジュールも取得する必要があります。
+
+```sh
+git clone --recurse-submodules <repository-url>
+```
+
+通常のcloneを行った場合は、次で補えます。
+
+```sh
+git submodule update --init --recursive
+npm run sync-shared-agent
+```
+
 PowerShellで2を行う例:
 
 ```powershell

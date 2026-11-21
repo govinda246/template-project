@@ -50,13 +50,13 @@ function frontmatter(contents) {
   return match?.[0] ?? '';
 }
 
-async function writeReference(target, sourceRelative) {
-  const source = await readFile(sourceRelative, 'utf8');
-  const metadata = frontmatter(source);
+async function writeReference(target, source, sourceReference) {
+  const sourceContents = await readFile(source, 'utf8');
+  const metadata = frontmatter(sourceContents);
   const body = [
     '# Shared Agent reference',
     '',
-    `Read and follow the canonical shared definition at \`${sourceRelative}\`.`,
+    `Read and follow the canonical shared definition at \`${sourceReference}\`.`,
     'Do not duplicate or edit that definition in the project-specific location.',
   ].join('\n');
   await mkdir(path.dirname(target), { recursive: true });
@@ -123,8 +123,12 @@ export async function syncSharedAgent(root) {
           : path.posix.join('shared', relativePath);
       const target = path.join(targetRoot, outputRelative);
       const source = path.join(sourceRoot, relativePath);
+      const sourceReference = path
+        .relative(root, source)
+        .split(path.sep)
+        .join('/');
       if (kind === 'agents') {
-        await writeReference(target, path.relative(root, source));
+        await writeReference(target, source, sourceReference);
       } else {
         if (!relativePath.endsWith('/SKILL.md')) {
           continue;
@@ -135,7 +139,7 @@ export async function syncSharedAgent(root) {
           `shared-${skillName}`,
           'SKILL.md',
         );
-        await writeReference(skillTarget, path.relative(root, source));
+        await writeReference(skillTarget, source, sourceReference);
         synced.push(path.relative(root, skillTarget));
         continue;
       }
