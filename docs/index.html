@@ -332,6 +332,60 @@
         background: var(--orange-soft);
       }
 
+      .comparison {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.92rem;
+      }
+
+      .comparison th,
+      .comparison td {
+        padding: 0.85rem 0.75rem;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .comparison th {
+        color: var(--muted);
+        font-size: 0.76rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .comparison tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+      }
+
+      .verdict {
+        display: inline-block;
+        min-width: 4rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-align: center;
+      }
+
+      .verdict.keep {
+        color: var(--green);
+        background: var(--green-soft);
+      }
+
+      .verdict.conditional {
+        color: var(--orange);
+        background: var(--orange-soft);
+      }
+
+      .verdict.supporting {
+        color: var(--purple);
+        background: var(--purple-soft);
+      }
+
       .commands {
         overflow-x: auto;
         padding: 1rem 1.2rem;
@@ -397,6 +451,7 @@
           <a href="#roles">役割</a>
           <a href="#network">通信</a>
           <a href="#security">セキュリティ</a>
+          <a href="#limits">制限と理由</a>
           <a href="#start">起動方法</a>
         </nav>
       </div>
@@ -572,6 +627,115 @@
             <h3>使えない危険な操作</h3>
             <p><code>docker</code>、<code>sudo</code>、<code>mount</code>、Copilot CLIの直接起動など。</p>
           </article>
+        </div>
+      </section>
+
+      <section id="limits">
+        <h2>安全性のためにできないことと、その正当性</h2>
+        <p class="lead">
+          制限には「主要防御」「条件付きで必要」「補助的な事故防止」の違いがあります。
+          補助策を完全な防御だと考えず、それぞれの役割を明記します。
+        </p>
+        <div class="table-wrap">
+          <table class="comparison">
+            <thead>
+              <tr>
+                <th>できないこと</th>
+                <th>安全上の理由</th>
+                <th>評価</th>
+                <th>代替・注意点</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>許可リスト外のサイト・APIへ自由に接続</td>
+                <td>
+                  ソースコードや資格情報の持ち出しと、悪意ある実行ファイルの取得を減らします。
+                  平文HTTPや443番以外も中継しません。
+                </td>
+                <td><span class="verdict keep">維持</span></td>
+                <td>
+                  必要なホストを完全一致で確認して
+                  <code>egress-allowlist.txt</code> に追加します。
+                </td>
+              </tr>
+              <tr>
+                <td>PC・LAN内の別サービスへ直接接続</td>
+                <td>
+                  コンテナからホストや家庭内・会社内機器を探索・操作されないようにします。
+                  <code>localhost:3000</code> は公開されたゲーム入口に限られます。
+                </td>
+                <td><span class="verdict keep">維持</span></td>
+                <td>連携が必要なら、必要なAPIだけを明示的な窓口として設計します。</td>
+              </tr>
+              <tr>
+                <td>Docker、sudo、mount、nsenterなどの管理操作</td>
+                <td>
+                  Docker socketはマウントせず、全capabilityを外し、特権モードも使いません。
+                  これを変えるとコンテナ隔離そのものが弱くなります。
+                </td>
+                <td><span class="verdict keep">維持</span></td>
+                <td>管理操作はコンテナ外で人が実行します。名前による拒否は補助策です。</td>
+              </tr>
+              <tr>
+                <td>SSH接続・SSH経由のGit push</td>
+                <td>
+                  SSHは22番などの未許可ポートで接続でき、ホスト鍵や外部秘密鍵も渡されません。
+                  任意サーバーを新しい通信経路にしないためです。
+                </td>
+                <td><span class="verdict keep">維持</span></td>
+                <td>pushや管理はホスト側で確認して行います。</td>
+              </tr>
+              <tr>
+                <td>GitHubやクラウドの資格情報を自動利用</td>
+                <td>
+                  侵害された依存関係や実行コマンドが、リポジトリやクラウドへ認証済み操作を行うことを防ぎます。
+                </td>
+                <td><span class="verdict keep">維持</span></td>
+                <td>必要なときだけホスト側で認証し、短命なトークンを使います。</td>
+              </tr>
+              <tr>
+                <td><code>.git</code>、設定、scriptsを安全シェルから書き換え</td>
+                <td>
+                  エージェントが自身の制限、CI、信頼スクリプトを同じ実行中に書き換える経路を防ぎます。
+                </td>
+                <td><span class="verdict keep">維持</span></td>
+                <td>
+                  人が差分をレビューし、変更後に<code>Dev Containers: Rebuild Container</code>で再確認します。
+                </td>
+              </tr>
+              <tr>
+                <td>Copilot CLIの直接起動や自動承認された端末操作</td>
+                <td>
+                  監督のない入れ子実行と、レビュー前の危険な操作を減らします。
+                  ただしコマンド名検査は回避可能なので主要防御ではありません。
+                </td>
+                <td><span class="verdict supporting">補助</span></td>
+                <td>
+                  VS Codeの手動承認付きAgent、ネットワーク分離、資格情報非継承が本体の防御です。
+                </td>
+              </tr>
+              <tr>
+                <td>npm依存関係や取得したスクリプトを完全に信頼しない</td>
+                <td>
+                  許可リストは通信先を絞るだけで、npmパッケージやGitHub上のコード自体が安全とは保証しません。
+                  依存関係スクリプトは通常コマンド権限で動きます。
+                </td>
+                <td><span class="verdict conditional">注意</span></td>
+                <td>
+                  lockfile、バージョン固定、差分レビュー、npmスクリプト確認、必要なら
+                  <code>npm ci --ignore-scripts</code> を使います。
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout" style="margin-top: 1rem">
+          <strong>精査結果:</strong>
+          主要な制限は、セキュリティ上の目的と実際の防御が一致しています。
+          一方、特定コマンド名を弾く方式は「うっかり防止」までで、完全な防御とは扱わないべきです。
+          また、許可したGitHubやnpmのホスト名から流れるコードは安全性を保証されないため、
+          通信制限だけでなく依存関係のレビューが必要です。
         </div>
       </section>
 
