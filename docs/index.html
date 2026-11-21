@@ -386,6 +386,43 @@
         background: var(--purple-soft);
       }
 
+      .verdict.risky {
+        color: #a52a2a;
+        background: #ffecec;
+      }
+
+      .risk-scale {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.75rem;
+      }
+
+      .risk-step {
+        padding: 1rem;
+        border: 1px solid var(--line);
+        border-top: 5px solid var(--blue);
+        border-radius: 0.75rem;
+        background: #fbfcff;
+      }
+
+      .risk-step:nth-child(2) {
+        border-top-color: #c08a00;
+      }
+
+      .risk-step:nth-child(3) {
+        border-top-color: var(--orange);
+      }
+
+      .risk-step:nth-child(4) {
+        border-top-color: #b42318;
+      }
+
+      .risk-step p {
+        margin: 0.35rem 0 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
       .commands {
         overflow-x: auto;
         padding: 1rem 1.2rem;
@@ -411,6 +448,7 @@
         }
 
         .grid,
+        .risk-scale,
         .grid.two,
         .diagram {
           grid-template-columns: 1fr;
@@ -452,6 +490,7 @@
           <a href="#network">通信</a>
           <a href="#security">セキュリティ</a>
           <a href="#limits">制限と理由</a>
+          <a href="#relaxation">緩め方</a>
           <a href="#start">起動方法</a>
         </nav>
       </div>
@@ -736,6 +775,153 @@
           一方、特定コマンド名を弾く方式は「うっかり防止」までで、完全な防御とは扱わないべきです。
           また、許可したGitHubやnpmのホスト名から流れるコードは安全性を保証されないため、
           通信制限だけでなく依存関係のレビューが必要です。
+        </div>
+      </section>
+
+      <section id="relaxation">
+        <h2>利便性のために制限を緩める方法</h2>
+        <p class="lead">
+          いきなり全制限を解除するのではなく、目的ごとに最小限だけ緩めます。
+          特に「許可した通信先」と「与えた資格情報」は別々に管理してください。
+        </p>
+        <div class="risk-scale" aria-label="制限緩和のリスク段階">
+          <article class="risk-step">
+            <span class="tag green">段階1・低</span>
+            <h3>ホストを追加</h3>
+            <p>必要なAPIを完全一致で1件ずつ許可します。最も狭い緩和です。</p>
+          </article>
+          <article class="risk-step">
+            <span class="tag orange">段階2・中</span>
+            <h3>承認を増やす</h3>
+            <p>特定操作だけ自動承認します。資格情報は渡さないままにします。</p>
+          </article>
+          <article class="risk-step">
+            <span class="tag orange">段階3・高</span>
+            <h3>資格情報を渡す</h3>
+            <p>短命トークンや限定権限だけに絞り、利用後に消してください。</p>
+          </article>
+          <article class="risk-step">
+            <span class="tag orange">段階4・重大</span>
+            <h3>Docker・ホストへ接続</h3>
+            <p>コンテナ隔離を越えます。別環境で人が明示実行する方が安全です。</p>
+          </article>
+        </div>
+
+        <div class="table-wrap" style="margin-top: 1.25rem">
+          <table class="comparison">
+            <thead>
+              <tr>
+                <th>目的</th>
+                <th>最小限の緩め方</th>
+                <th>増える利便性</th>
+                <th>主なリスク</th>
+                <th>判断</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>特定APIや追加パッケージを使う</td>
+                <td>
+                  完全なホスト名と必要性を確認し、
+                  <code>egress-allowlist.txt</code> に追加してプロキシを再起動。
+                  ワイルドカードやIPの無制限許可は避ける。
+                </td>
+                <td>npm package、公式API、固定CDNを利用できる</td>
+                <td>
+                  許可ホストから悪意あるコードやデータを受け取る可能性。
+                  大きなGitHub/npm配信網は「ホスト単位」では内容保証にならない。
+                </td>
+                <td><span class="verdict conditional">要レビュー</span></td>
+              </tr>
+              <tr>
+                <td>PC上の開発サーバーやDBと連携</td>
+                <td>
+                  host/ポート単位の専用プロキシを設け、必要なAPIだけ転送する。
+                  host networkや全ポート公開は行わない。
+                </td>
+                <td>ローカルDB、画像生成、モックAPIなどと連携できる</td>
+                <td>LAN探索、管理画面や認証済みローカルサービスへの不正アクセス。</td>
+                <td><span class="verdict conditional">用途限定</span></td>
+              </tr>
+              <tr>
+                <td>GitHub pushを容器内でも使う</td>
+                <td>
+                  まずは別にホスト側pushを維持。必要なら期限・対象リポジトリ・権限を限定した
+                  fine-grained tokenを一時的に渡す。
+                  長期的な個人トークンやSSH秘密鍵は渡さない。
+                </td>
+                <td>Agentからのコミット後すぐ公開できる</td>
+                <td>侵害されたコードが権限内のリポジトリを書き換えられる。</td>
+                <td><span class="verdict risky">高リスク</span></td>
+              </tr>
+              <tr>
+                <td>反復作業を自動承認する</td>
+                <td>
+                  <code>chat.tools.terminal.autoApprove</code> は読み取り専用コマンドや
+                  テストなど、完全一致のコマンドだけに限定する。
+                  ワイルドカードや任意シェル実行を許可しない。
+                </td>
+                <td>確認回数を減らし、定型テストや差分確認を速くできる</td>
+                <td>
+                  自動承認範囲が広すぎると、見せかけた同名操作やコマンド連結を通す可能性。
+                  破壊的操作は常に手動承認。
+                </td>
+                <td><span class="verdict conditional">限定的</span></td>
+              </tr>
+              <tr>
+                <td>Agentに設定ファイルを編集させる</td>
+                <td>
+                  変更対象を<code>.vscode</code>など1種類に限定し、
+                  <code>.git</code>・信頼スクリプト・セキュリティ設定は読み取り専用のままにする。
+                </td>
+                <td>開発ツール設定の更新が楽になる</td>
+                <td>セキュリティガードレールやCIを実行主体が直接弱められる。</td>
+                <td><span class="verdict risky">高リスク</span></td>
+              </tr>
+              <tr>
+                <td>コンテナからDockerを使う</td>
+                <td>
+                  原則として行わず、ホスト側の承認付きスクリプトや別管理マシンを使う。
+                  Docker socketのマウントやprivilegedはこの環境では推奨しない。
+                </td>
+                <td>テスト用コンテナや複合サービスをAgentから起動できる</td>
+                <td>
+                  Docker socket利用者は実質的にホスト管理者。ファイル読み出し、
+                  コンテナ作成、マウントによる資格情報窃取が可能。
+                </td>
+                <td><span class="verdict risky">非推奨</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid two" style="margin-top: 1rem">
+          <article class="card">
+            <span class="tag green">安全な緩和の順番</span>
+            <ol>
+              <li>必要な目的と期限を決める</li>
+              <li>許可する対象を1つだけ追加する</li>
+              <li>コード・設定差分を人がレビューする</li>
+              <li>再ビルドしてセキュリティテストを実行する</li>
+              <li>不要になった許可・秘密を削除する</li>
+            </ol>
+          </article>
+          <article class="card">
+            <span class="tag orange">同時に緩めないもの</span>
+            <ul>
+              <li>外部ネットワークと長期資格情報</li>
+              <li>Docker socketと保護ファイルへの書き込み</li>
+              <li>host networkと自動承認</li>
+              <li>任意コード実行とクラウド管理権限</li>
+            </ul>
+            <p>同時に緩めると、侵害時に被害がホストや外部サービスへ直結します。</p>
+          </article>
+        </div>
+        <div class="callout" style="margin-top: 1rem">
+          <strong>判断の原則:</strong>
+          「できることを増やす」より「今回必要な1機能だけを期限付きで許可する」方が安全です。
+          緩和後もネットワーク、資格情報、ファイル、Docker権限は別々に見直し、
+          1つを緩めたら他の層はそのまま維持します。
         </div>
       </section>
 
