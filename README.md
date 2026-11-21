@@ -246,9 +246,12 @@ npm run setup-shared-agent -- --url https://github.com/OWNER/shared-agent.git
 ブランチを明示して最初の参照点を選ぶ場合は`--branch`を追加します。
 Gitサブモジュールは`.github/shared`へ追加され、Gitが参照commitを固定します。
 共有リポジトリの指示は`.github/copilot-instructions.local.md`と結合されて
-`.github/copilot-instructions.md`を生成し、Agent定義とSkillもCopilotが検出する
-`.github/agents`、`.github/skills`へ展開します。`bin/`はセキュアランナーの
-PATHへ追加されます。
+`.github/copilot-instructions.md`へ生成します。Agent定義とSkillは
+`.vscode/settings.json`から`.github/agents`、`.github/shared/agents`、
+`.github/shared/skills`を直接検索対象にします。
+`.github/agents/game-conductor.agent.md`は、依頼分類、工程管理、hook実行、
+専門Agentへの委譲を担当するプロジェクトの窓口です。共有Agentパックの`bin/`は
+セキュアランナーのPATHへ追加されます。
 
 通常の更新では、次の順でサブモジュールのcommitを明示的にレビューします。
 
@@ -261,8 +264,9 @@ git commit
 ```
 
 共有リポジトリは固定commitのコードとして扱い、URL、差分、実行ファイルを
-確認せずに更新しないでください。Dev Container作成時とCIでは同期処理が実行され、
-生成ファイルはGit管理外です。
+確認せずに更新しないでください。Dev Container作成時とCIではinstructionsの
+同期処理が実行されます。AgentとSkillはサブモジュールを直接参照するため、
+検索場所用の複製やラッパーファイルは作成しません。
 
 ## Dockerを使わないWindowsローカル実行
 

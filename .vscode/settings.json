@@ -19,5 +19,12 @@
   "chat.defaultConfiguration": {
     "mode": "interactive",
     "approvals": "manual"
+  },
+  "chat.agentFilesLocations": {
+    ".github/agents": true,
+    ".github/shared/agents": true
+  },
+  "chat.agentSkillsLocations": {
+    ".github/shared/skills": true
   }
 }

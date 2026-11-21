@@ -133,7 +133,7 @@ async function main() {
 
   const synced = await syncSharedAgent(root);
   console.log(`Shared Agent ready at ${SUBMODULE_PATH}.`);
-  console.log(`Synchronized ${synced.files.length} generated Agent files.`);
+  console.log(`Synchronized ${synced.instructions}.`);
   console.log('Review the .gitmodules and submodule commit before committing.');
 }
 

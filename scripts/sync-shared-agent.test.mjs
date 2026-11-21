@@ -34,17 +34,7 @@ test('merges local and shared instructions and exposes shared files', async () =
   assert.equal(result.sharedPresent, true);
   assert.match(instructions, /Local/);
   assert.match(instructions, /Shared/);
-  assert.deepEqual(result.files.sort(), [
-    '.github/agents/shared-reviewer.agent.md',
-    '.github/skills/shared-demo/SKILL.md',
-  ]);
-  assert.match(
-    await readFile(
-      path.join(root, '.github/skills/shared-demo/SKILL.md'),
-      'utf8',
-    ),
-    /\.github\/shared\/skills\/demo\/SKILL\.md/,
-  );
+  assert.deepEqual(result.files, []);
 });
 
 test('rejects a shared repository without the required bin directory', async () => {
