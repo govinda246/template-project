@@ -17,8 +17,11 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && test "$(node --version)" = "v${EXPECTED_NODE_VERSION}" \
     && test "$(npm --version)" = "${EXPECTED_NPM_VERSION}" \
-    && mkdir -p /home/node/.vscode-server/data/User/workspaceStorage /opt/secure-template \
-    && chown -R node:node /home/node/.vscode-server
+    && mkdir -p \
+        /home/node/.copilot/session-state \
+        /home/node/.vscode-server/data/User/workspaceStorage \
+        /opt/secure-template \
+    && chown -R node:node /home/node/.copilot /home/node/.vscode-server
 
 # Agentから書き換えられないtrusted pathへ、proxyとallowlistをroot所有で配置する。
 COPY --chown=root:root .devcontainer/egress-proxy.mjs .devcontainer/egress-allowlist.txt /opt/secure-template/
