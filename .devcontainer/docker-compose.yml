@@ -13,6 +13,7 @@ services:
       # workspaceは開発に必要なためbindする。秘密情報はこのフォルダーへ置かない。
       - ..:/workspaces/github_agent_test:cached
       - agent-session-history:/home/node/.vscode-server/data/User/workspaceStorage
+      - copilot-session-history:/home/node/.copilot/session-state
     networks:
       - sandbox
     security_opt:
@@ -75,6 +76,7 @@ services:
 
 volumes:
   agent-session-history:
+  copilot-session-history:
 
 networks:
   # internal networkにはインターネット向けdefault routeが作られない。
