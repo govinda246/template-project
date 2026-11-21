@@ -169,10 +169,12 @@
       }
 
       .card {
+        min-width: 0;
         padding: 1.25rem;
         border: 1px solid var(--line);
         border-radius: 0.9rem;
         background: #fbfcff;
+        overflow-wrap: anywhere;
       }
 
       .card p,
@@ -443,8 +445,45 @@
       }
 
       @media (max-width: 760px) {
+        body {
+          font-size: 0.94rem;
+        }
+
         header {
-          padding-top: 3.5rem;
+          padding: 3rem 0.9rem 4.2rem;
+        }
+
+        header p {
+          font-size: 1rem;
+        }
+
+        .wrap {
+          width: min(100% - 1rem, 1100px);
+        }
+
+        main {
+          margin-top: -1.8rem;
+        }
+
+        section {
+          margin: 0.9rem 0;
+          padding: 1.15rem;
+          border-radius: 0.9rem;
+        }
+
+        h1 {
+          letter-spacing: -0.025em;
+        }
+
+        .quick-nav {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .quick-nav a {
+          min-width: 0;
+          padding: 0.45rem 0.65rem;
+          text-align: center;
         }
 
         .grid,
@@ -471,6 +510,130 @@
         .layer {
           grid-template-columns: 1fr;
           gap: 0.2rem;
+        }
+
+        .layer {
+          padding: 0.8rem 0.9rem;
+        }
+
+        .node {
+          min-height: auto;
+        }
+
+        .table-wrap {
+          overflow: visible;
+        }
+
+        .comparison,
+        .comparison tbody,
+        .comparison tr,
+        .comparison td {
+          display: block;
+          width: 100%;
+        }
+
+        .comparison thead {
+          display: none;
+        }
+
+        .comparison tr {
+          margin-bottom: 0.9rem;
+          padding: 0.35rem 0.9rem;
+          border: 1px solid var(--line);
+          border-radius: 0.75rem;
+          background: #fbfcff;
+        }
+
+        .comparison td {
+          padding: 0.65rem 0;
+          border-bottom: 1px dashed var(--line);
+          overflow-wrap: anywhere;
+        }
+
+        .comparison td::before {
+          display: block;
+          margin-bottom: 0.18rem;
+          color: var(--muted);
+          font-size: 0.72rem;
+          font-weight: 800;
+          letter-spacing: 0.04em;
+        }
+
+        .comparison td:first-child::before {
+          content: "項目";
+        }
+
+        .comparison td:nth-child(2)::before {
+          content: "内容";
+        }
+
+        .comparison td:nth-child(3)::before {
+          content: "判断・利便性";
+        }
+
+        .comparison td:nth-child(4)::before {
+          content: "対策・リスク";
+        }
+
+        .comparison td:nth-child(5)::before {
+          content: "判断";
+        }
+
+        .comparison.limits td:first-child::before {
+          content: "できないこと";
+        }
+
+        .comparison.limits td:nth-child(2)::before {
+          content: "安全上の理由";
+        }
+
+        .comparison.limits td:nth-child(3)::before {
+          content: "評価";
+        }
+
+        .comparison.limits td:nth-child(4)::before {
+          content: "代替・注意点";
+        }
+
+        .comparison td:last-child,
+        .comparison tr:last-child td {
+          border-bottom: 0;
+        }
+
+        .comparison.relaxation td:first-child::before {
+          content: "目的";
+        }
+
+        .comparison.relaxation td:nth-child(2)::before {
+          content: "最小限の緩め方";
+        }
+
+        .comparison.relaxation td:nth-child(3)::before {
+          content: "増える利便性";
+        }
+
+        .comparison.relaxation td:nth-child(4)::before {
+          content: "主なリスク";
+        }
+
+        .comparison.residual td:first-child::before {
+          content: "残る問題";
+        }
+
+        .comparison.residual td:nth-child(2)::before {
+          content: "防ぎ切れない理由";
+        }
+
+        .comparison.residual td:nth-child(3)::before {
+          content: "期待できること";
+        }
+
+        .comparison.residual td:nth-child(4)::before {
+          content: "追加の対策";
+        }
+
+        .commands pre {
+          font-size: 0.82rem;
         }
       }
     </style>
@@ -677,7 +840,7 @@
           補助策を完全な防御だと考えず、それぞれの役割を明記します。
         </p>
         <div class="table-wrap">
-          <table class="comparison">
+          <table class="comparison limits">
             <thead>
               <tr>
                 <th>できないこと</th>
@@ -809,7 +972,7 @@
         </div>
 
         <div class="table-wrap" style="margin-top: 1.25rem">
-          <table class="comparison">
+          <table class="comparison relaxation">
             <thead>
               <tr>
                 <th>目的</th>
@@ -933,7 +1096,7 @@
           以下は、設定しても残る重要なリスクです。
         </p>
         <div class="table-wrap">
-          <table class="comparison">
+          <table class="comparison residual">
             <thead>
               <tr>
                 <th>残る問題</th>
