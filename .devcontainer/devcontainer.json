@@ -1,74 +1,74 @@
 {
-  "name": "Node.js Dev Container",
-  // DockerfileでNode.jsイメージにLinux用サンドボックスの依存パッケージを追加します。
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".."
-  },
-  // Docker標準seccompを維持し、Bubblewrapに必要な名前空間操作だけ追加許可します。
-  "runArgs": [
-    "--security-opt=seccomp=${localWorkspaceFolder}/.devcontainer/bubblewrap-seccomp.json"
-  ],
-  // 権限を制限したnodeユーザーで実行します。
+  "name": "Secure Phaser Dev Container",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "devcontainer",
+  "runServices": ["egress-proxy"],
+  "workspaceFolder": "/workspaces/github_agent_test",
   "remoteUser": "node",
-  // Copilotのチャット履歴とツール実行記録を、コンテナ再作成後も保持します。
-  "mounts": [
-    "source=agent-session-history,target=/home/node/.vscode-server/data/User/workspaceStorage,type=volume"
-  ],
-  // Webアプリ開発でよく使うポートをホストへ転送します。
+  "shutdownAction": "stopCompose",
   "forwardPorts": [3000],
   "customizations": {
     "vscode": {
-      // Copilot公式拡張と、Node.js開発向けの編集支援拡張をインストールします。
       "extensions": [
-        "GitHub.copilot",
-        "GitHub.copilot-chat",
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode"
+        "dbaeumer.vscode-eslint@3.0.34",
+        "esbenp.prettier-vscode@12.4.0"
       ],
       "settings": {
-        // 新しいエージェントセッションを対話モード・手動承認で開始します。
         "chat.defaultConfiguration": {
           "mode": "interactive",
           "approvals": "manual"
         },
-        // Chatビューでも標準の手動承認を使います。
         "chat.permissions.default": "default",
-        // 全体の自動承認を無効にし、ワークスペースの編集にも確認を求めます。
         "chat.tools.global.autoApprove": false,
         "chat.tools.edits.autoApprove": {
           "**/*": false
         },
-        // ターミナルツールの自動承認と、承認ルールによる自動実行を無効にします。
         "chat.tools.eligibleForAutoApproval": {
-          "runInTerminal": false,
+          "runInTerminal": true,
           "sendToTerminal": false
         },
-        "chat.tools.terminal.enableAutoApprove": false,
-        // URLへの要求や応答を自動承認しません。
+        "chat.tools.terminal.enableAutoApprove": true,
+        "chat.tools.terminal.autoApprove": {
+          "/.*/": true,
+          "git status": true,
+          "git diff": true,
+          "git log": true,
+          "npm test": true,
+          "npm run lint": true,
+          "pytest": true,
+          "/^(rm|rmdir|unlink|shred|del|erase)\\b/i": false,
+          "/^(curl|wget|ssh|scp|sftp|nc|netcat|telnet)\\b/i": false,
+          "/^(chmod|chown|chgrp)\\b/i": false,
+          "/^(sudo|su|mount|umount|unshare|nsenter|iptables|nft|pkill|killall)\\b/i": false,
+          "/^(docker|podman|nerdctl)\\b/i": false,
+          "/^git\\s+(push|reset|clean|checkout|restore|rebase|branch\\s+-[dD])\\b/i": false,
+          "/^(aws|az|gcloud)\\b/i": false,
+          "/^(Remove-Item|Clear-Content|Set-Acl|takeown|icacls)\\b/i": false
+        },
         "chat.tools.urls.autoApprove": {},
-        // エージェントのターミナルプロセスをローカルサンドボックス内で実行します。
         "chat.agent.sandbox.enabled": "on",
-        // サンドボックス内からの外部通信とローカルネットワーク通信を遮断します。
         "chat.agent.sandbox.network.allowNetwork": false,
         "chat.agent.sandbox.network.allowLocalNetwork": false,
-        // 開発ツールの設定やキャッシュへの自動アクセスを禁止し、Node.js実行ファイルのある/usr/localだけ読み取り専用で許可します。
         "chat.agent.sandbox.fileSystem.allowDevToolAccess": false,
-        "chat.agent.sandbox.fileSystem.userConfiguredPaths": {
-          "readonlyPaths": [
-            "/usr/local"
-          ]
-        },
-        // GitやGitHub CLIの認証情報をエージェントのコマンドに渡しません。
         "chat.agent.sandbox.credentials.authenticategit": false,
         "chat.agent.sandbox.credentials.authenticategh": false,
-        // サンドボックス外でのコマンド実行を許可しません。
         "chat.agent.sandbox.allowUnsandboxedCommands": false,
-        // 管理対象のMCPサーバーと言語サーバーもサンドボックス内で実行します。
         "chat.agent.sandbox.mcpServers": true,
         "chat.agent.sandbox.lspServers": true,
-        // セッション履歴をGitHubへ同期せず、ローカルに保存します。
-        "chat.sessionSync.enabled": false
+        "chat.sessionSync.enabled": false,
+        "terminal.integrated.defaultProfile.linux": "Secure shell",
+        "terminal.integrated.profiles.linux": {
+          "Secure shell": {
+            "path": "/bin/bash",
+            "args": [
+              "--noprofile",
+              "--norc",
+              "/workspaces/github_agent_test/scripts/secure-shell"
+            ]
+          }
+        },
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
       }
     }
   }

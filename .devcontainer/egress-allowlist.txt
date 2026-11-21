@@ -1,0 +1,10 @@
+# Exact hostnames allowed for HTTPS package, source, and Copilot access.
+registry.npmjs.org
+github.com
+api.github.com
+objects.githubusercontent.com
+codeload.github.com
+raw.githubusercontent.com
+api.githubcopilot.com
+copilot-proxy.githubusercontent.com
+copilot-telemetry.githubusercontent.com

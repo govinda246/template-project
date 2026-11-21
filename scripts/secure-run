@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -eq 0 ]]; then
+  echo "usage: secure-run [--offline] COMMAND [ARG...]" >&2
+  exit 64
+fi
+
+network_args=()
+if [[ ${1:-} == "--offline" ]]; then
+  network_args=(--unshare-net)
+  shift
+fi
+
+if [[ $# -eq 0 ]]; then
+  echo "secure-run: command is required after --offline" >&2
+  exit 64
+fi
+
+command_name="$(basename -- "$1")"
+case "$command_name" in
+  bwrap|docker|podman|sudo|su|mount|umount|pivot_root|unshare|nsenter|iptables|nft|ip|slirp4netns|ssh|scp)
+    echo "secure-run: dangerous command '$command_name' is not permitted" >&2
+    exit 126
+    ;;
+esac
+
+project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+home_dir="${TMPDIR:-/tmp}/secure-home-${UID}"
+cache_dir="$home_dir/.cache"
+mkdir -p "$home_dir" "$cache_dir"
+
+readonly_dirs=(
+  /bin
+  /etc
+  /lib
+  /lib64
+  /opt
+  /sbin
+  /usr
+)
+
+args=(
+  --die-with-parent
+  --new-session
+  --unshare-user
+  --unshare-pid
+  --unshare-ipc
+  --unshare-uts
+  --clearenv
+  --proc /proc
+  --dev /dev
+  --tmpfs /tmp
+  --tmpfs /run
+)
+
+for path in "${readonly_dirs[@]}"; do
+  if [[ -e "$path" ]]; then
+    args+=(--ro-bind "$path" "$path")
+  fi
+done
+
+args+=(
+  --tmpfs /home/node
+  --dir /home/node/.cache
+  --bind "$cache_dir" /home/node/.cache
+  --bind "$project_root" "$project_root"
+  --chdir "$project_root"
+  --setenv HOME /home/node
+  --setenv USER node
+  --setenv LOGNAME node
+  --setenv PATH /usr/local/share/npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  --setenv SHELL /bin/bash
+  --setenv LANG C.UTF-8
+  --setenv HTTP_PROXY http://egress-proxy:3128
+  --setenv HTTPS_PROXY http://egress-proxy:3128
+  --setenv ALL_PROXY http://egress-proxy:3128
+  --setenv NO_PROXY localhost,127.0.0.1
+)
+
+exec bwrap "${network_args[@]}" "${args[@]}" -- "$@"

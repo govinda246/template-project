@@ -1,0 +1,58 @@
+name: secure-phaser-template
+
+services:
+  devcontainer:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    command: sleep infinity
+    init: true
+    user: node
+    volumes:
+      - ..:/workspaces/github_agent_test:cached
+      - agent-session-history:/home/node/.vscode-server/data/User/workspaceStorage
+    networks:
+      - sandbox
+    security_opt:
+      - no-new-privileges:true
+      - seccomp=./bubblewrap-seccomp.json
+    cap_drop:
+      - ALL
+    devices:
+      - /dev/net/tun:/dev/net/tun
+
+  egress-proxy:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    command:
+      - node
+      - /opt/secure-template/egress-proxy.mjs
+    init: true
+    user: node
+    read_only: true
+    tmpfs:
+      - /tmp
+    networks:
+      - sandbox
+      - egress
+    expose:
+      - "3128"
+      - "3000"
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      FRONTEND_PROXY_TARGET: devcontainer
+      FRONTEND_PROXY_PORT: "3000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+volumes:
+  agent-session-history:
+
+networks:
+  sandbox:
+    internal: true
+  egress: {}

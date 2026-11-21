@@ -1316,7 +1316,9 @@
     },
     {
       "names": [
+        "clone",
         "mount",
+        "unshare",
         "umount2",
         "pivot_root"
       ],
