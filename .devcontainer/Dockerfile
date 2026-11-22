@@ -26,6 +26,15 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && case "$(node --version)" in "v${EXPECTED_NODE_MAJOR}."*) ;; *) exit 1 ;; esac \
     && case "$(npm --version)" in "${EXPECTED_NPM_MAJOR}."*) ;; *) exit 1 ;; esac \
+    && npm install \
+        --prefix /usr/local/lib/node_modules/npm \
+        --ignore-scripts \
+        --no-save \
+        --package-lock=false \
+        brace-expansion@5.0.11 \
+        undici@6.29.1 \
+    && test -d /usr/local/lib/node_modules/npm/node_modules/brace-expansion \
+    && test -d /usr/local/lib/node_modules/npm/node_modules/undici \
     && mkdir -p \
         /home/node/.copilot/session-state \
         /home/node/.vscode-server/data/agentSessionData \
