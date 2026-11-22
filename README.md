@@ -24,6 +24,13 @@ Windowsでは、workspaceを開いたときに`Ensure Docker Desktop`タスク�
 Desktopが停止している場合は起動し、Engineが応答するまで最大90秒待機します。VS Codeが初回に
 自動タスクの確認を表示したら、このworkspaceだけ`Allow Automatic Tasks in Folder`を許可してください。
 
+Copilot SDKのイベントログ、Agent Hostの会話DB、VS Codeのworkspace state、
+Copilot Chat / Agent Hostの一覧metadataは、それぞれ別のnamed volumeへ保存します。
+とくに`agentSessionData`には表示されるturn本文とツール結果が含まれるため、
+一覧metadataだけでは会話を復元できません。これらのvolumeにはコード断片や設定が
+含まれ得るのでGitへバックアップせず、必要に応じてローカルの信頼できる場所へ
+退避してください。
+
 ## セキュリティ境界
 
 ### Docker

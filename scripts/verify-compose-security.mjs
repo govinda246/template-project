@@ -50,6 +50,36 @@ assert.equal(
   devcontainer.volumes.some(({ source }) => source === '/var/run/docker.sock'),
   false,
 );
+assert.deepEqual(
+  devcontainer.volumes
+    .filter(({ source }) =>
+      [
+        'agent-session-history',
+        'agent-session-data',
+        'copilot-global-storage',
+        'copilot-session-history',
+      ].includes(source),
+    )
+    .map(({ source, target }) => ({ source, target })),
+  [
+    {
+      source: 'agent-session-history',
+      target: '/home/node/.vscode-server/data/User/workspaceStorage',
+    },
+    {
+      source: 'agent-session-data',
+      target: '/home/node/.vscode-server/data/agentSessionData',
+    },
+    {
+      source: 'copilot-global-storage',
+      target: '/home/node/.vscode-server/data/User/globalStorage',
+    },
+    {
+      source: 'copilot-session-history',
+      target: '/home/node/.copilot/session-state',
+    },
+  ],
+);
 
 assert.equal(proxy.read_only, true);
 assert.deepEqual(proxy.cap_drop, ['ALL']);

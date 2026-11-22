@@ -19,6 +19,8 @@ services:
       # workspaceは開発に必要なためbindする。秘密情報はこのフォルダーへ置かない。
       - ..:/workspaces/template-project:cached
       - agent-session-history:/home/node/.vscode-server/data/User/workspaceStorage
+      - agent-session-data:/home/node/.vscode-server/data/agentSessionData
+      - copilot-global-storage:/home/node/.vscode-server/data/User/globalStorage
       - copilot-session-history:/home/node/.copilot/session-state
     networks:
       sandbox:
@@ -113,6 +115,8 @@ services:
 
 volumes:
   agent-session-history:
+  agent-session-data:
+  copilot-global-storage:
   copilot-session-history:
 
 networks:

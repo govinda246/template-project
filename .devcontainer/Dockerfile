@@ -19,6 +19,8 @@ RUN apt-get update \
     && test "$(npm --version)" = "${EXPECTED_NPM_VERSION}" \
     && mkdir -p \
         /home/node/.copilot/session-state \
+        /home/node/.vscode-server/data/agentSessionData \
+        /home/node/.vscode-server/data/User/globalStorage \
         /home/node/.vscode-server/data/User/workspaceStorage \
         /opt/secure-template \
     && chown -R node:node /home/node/.copilot /home/node/.vscode-server
