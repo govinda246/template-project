@@ -152,11 +152,11 @@ Composeでdevcontainerは2 CPU・4 GBメモリ・512 PID、egress proxyは0.5 CP
 - 使い捨てVMや物理的に分離した端末
 - 完全オフラインと事前承認済み依存関係
 - 読み取り専用コピーと成果物だけを受け渡す構成
-- 署名済み成果物、SBOM、依存関係・秘密の自動検査
+- 署名済み成果物、外部監視、復旧手順
 - CPU、メモリ、PID、ログ容量の上限
 - 外部監視、バックアップ、復旧手順
 
-資源上限、ログローテーション、GitHub ActionsのコミットSHA固定、Dependabot、npm auditを実装済みです。GitHub側ではSecret scanning、Push protection、Private vulnerability reporting、Dependabot alerts、Dependabot security updatesも有効化済みです。SBOM、バックアップ、専用VMは運用側の追加対策として残ります。
+資源上限、ログローテーション、GitHub ActionsのコミットSHA固定、Dependabot、npm audit、Trivyによるfilesystem・Dev Containerイメージ・設定ミス・秘密情報スキャンを実装済みです。GitHub側ではSecret scanning、Push protection、Private vulnerability reporting、Dependabot alerts、Dependabot security updatesも有効化済みです。CIではCycloneDX SBOMも生成します。バックアップ、専用VMは運用側の追加対策として残ります。
 
 公開ガイドには、追加対策なしを0点、現在の実装を71点、使い捨てVM・完全オフライン・資格情報なし・署名検証・外部監視・復旧を備えた比較用構成を100点とする相対スコアを掲載しています。通信・権限制御、資源上限、回帰テスト、依存関係監査などの実装済み対策は既に現在の配点へ反映しています。これは対策追加ごとに自動加点する指標ではなく、絶対的な安全度や脆弱性診断でもない独自の設計比較値です。
 
@@ -353,6 +353,11 @@ node scripts/verify-vscode-settings.mjs
 npm run build
 bash scripts/verify-security.sh
 ```
+
+GitHub Actionsのsecurity workflowでは、`npm audit`を維持しつつTrivyも実行します。
+filesystemのHigh/Critical設定ミスと秘密情報はCIを失敗させ、既存環境への影響を確認するため
+lockfileとDev ContainerイメージのHigh/Critical脆弱性レポートは当面、失敗ゲートにせず記録します。
+CycloneDX SBOMはCI workspaceの`trivy-sbom.cdx.json`へ生成されます。
 
 Node.jsとDocker CLIの両方があるホストまたはCI:
 
