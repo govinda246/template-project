@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${UID}" -ne 0 ]]; then
+  echo "devcontainer-entrypoint: must start as root to install DNS policy" >&2
+  exit 126
+fi
+
+dns_filter_ip="$(getent ahostsv4 dns-filter | awk 'NR == 1 { print $1 }')"
+if [[ -z "$dns_filter_ip" ]]; then
+  echo "devcontainer-entrypoint: unable to resolve dns-filter" >&2
+  exit 69
+fi
+printf 'nameserver %s\n' "$dns_filter_ip" > /etc/resolv.conf
+if ! iptables -C OUTPUT -p udp --dport 53 ! -d "$dns_filter_ip" -j REJECT 2>/dev/null; then
+  iptables -A OUTPUT -p udp --dport 53 ! -d "$dns_filter_ip" -j REJECT
+fi
+if ! iptables -C OUTPUT -p tcp --dport 53 ! -d "$dns_filter_ip" -j REJECT 2>/dev/null; then
+  iptables -A OUTPUT -p tcp --dport 53 ! -d "$dns_filter_ip" -j REJECT
+fi
+if command -v ip6tables >/dev/null 2>&1; then
+  if ! ip6tables -C OUTPUT -p udp --dport 53 -j REJECT 2>/dev/null; then
+    ip6tables -A OUTPUT -p udp --dport 53 -j REJECT
+  fi
+  if ! ip6tables -C OUTPUT -p tcp --dport 53 -j REJECT 2>/dev/null; then
+    ip6tables -A OUTPUT -p tcp --dport 53 -j REJECT
+  fi
+fi
+
+if ! iptables -t raw -C OUTPUT -p udp -d 127.0.0.11 --dport 53 -j DROP 2>/dev/null; then
+  iptables -t raw -A OUTPUT -p udp -d 127.0.0.11 --dport 53 -j DROP
+fi
+if ! iptables -t raw -C OUTPUT -p tcp -d 127.0.0.11 --dport 53 -j DROP 2>/dev/null; then
+  iptables -t raw -A OUTPUT -p tcp -d 127.0.0.11 --dport 53 -j DROP
+fi
+
+exec setpriv \
+  --reuid=node \
+  --regid=node \
+  --init-groups \
+  --bounding-set=-all \
+  --inh-caps=-all \
+  --ambient-caps=-all \
+  --securebits=+noroot,+noroot_locked \
+  "$@"

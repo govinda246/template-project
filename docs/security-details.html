@@ -795,7 +795,7 @@
       </section>
 
       <section id="roles">
-        <h2>2つのコンテナの役割</h2>
+        <h2>3つのコンテナの役割</h2>
         <p class="lead">同じDockerイメージから作られていますが、仕事は分けられています。</p>
         <div class="grid two">
           <article class="card">
@@ -806,7 +806,17 @@
               <li>TypeScriptとPhaserでゲームを編集</li>
               <li>Viteが3000番でゲームを配信</li>
               <li>プロジェクトを <code>/workspaces/template-project</code> に共有</li>
-              <li>通常ユーザー <code>node</code> で動作</li>
+              <li>起動処理後はユーザー <code>node</code>、capability 0で動作</li>
+            </ul>
+          </article>
+          <article class="card">
+            <span class="tag blue">名前解決担当</span>
+            <h3>dns-filter</h3>
+            <ul>
+              <li>許可された完全一致DNS名だけを転送</li>
+              <li>DNSレコード追加情報やトンネリング用の異常データを拒否</li>
+              <li>読み取り専用で、全capability削除後にポート53だけ許可</li>
+              <li>Docker内部DNSへの直接経路はdevcontainer側で遮断</li>
             </ul>
           </article>
           <article class="card">
@@ -906,7 +916,7 @@
           </div>
           <div class="layer blue">
             <strong>② Docker権限</strong>
-            <span>root権限・追加capability・Docker socket・特権モードを与えず、ホスト操作を遮断</span>
+            <span>Docker socket・特権モードは与えない。起動時capabilityはentrypoint内の設定にだけ使い、アプリ開始前に全て除去</span>
           </div>
           <div class="layer purple">
             <strong>③ プロセス空間</strong>
@@ -974,7 +984,8 @@
               <tr>
                 <td>Docker、sudo、mount、nsenterなどの管理操作</td>
                 <td>
-                  Docker socketはマウントせず、全capabilityを外し、特権モードも使いません。
+                  Docker socketはマウントせず、特権モードも使いません。devcontainerは
+                  起動時だけDNS・UID/GID設定に必要なcapabilityを受け取り、主プロセスへ渡す前に全て除去します。
                   これを変えるとコンテナ隔離そのものが弱くなります。
                 </td>
                 <td><span class="verdict keep">主要防御</span></td>
@@ -1524,7 +1535,7 @@ npm run build</pre>
           </article>
           <article class="card">
             <h3><code>.devcontainer/docker-compose.yml</code></h3>
-            <p>2つのコンテナ、ネットワーク、公開ポート、共有フォルダーを決めます。</p>
+            <p>3つのコンテナ、ネットワーク、公開範囲、共有フォルダーを決めます。</p>
           </article>
           <article class="card">
             <h3><code>.devcontainer/Dockerfile</code></h3>
@@ -1537,6 +1548,14 @@ npm run build</pre>
           <article class="card">
             <h3><code>scripts/secure-run</code></h3>
             <p>Bubblewrapでコマンドの見える範囲を小さくして実行します。</p>
+          </article>
+          <article class="card">
+            <h3><code>.github/shared-agent-policy.json</code></h3>
+            <p>共有Agentの承認URLと固定commitを記録し、取得前検証に使います。</p>
+          </article>
+          <article class="card">
+            <h3><code>scripts/audit-egress-logs.mjs</code></h3>
+            <p>ホストのDockerログから拒否済みCONNECT先を集計し、監査できるようにします。</p>
           </article>
           <article class="card">
             <h3><code>package.json</code></h3>

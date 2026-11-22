@@ -17,7 +17,7 @@ expect_failure() {
 
 expect_success "$secure_run" --offline node -e "process.stdout.write('isolated')"
 expect_success "$secure_run" --offline sh -c \
-  'test "$(command -v node)" = /usr/local/share/nvm/current/bin/node'
+  'case "$(command -v node)" in /usr/local/bin/node|/usr/local/share/nvm/current/bin/node) exit 0;; *) exit 1;; esac'
 expect_failure "$secure_run" --offline sh -c \
   'case ":$PATH:" in *":$SECURE_PROJECT_ROOT/.github/shared/bin:"*) exit 0;; *) exit 1;; esac'
 expect_failure "$secure_run" docker ps
@@ -40,6 +40,30 @@ expect_failure "$secure_run" --offline test -w "$project_root/.vscode"
 expect_failure "$secure_run" --offline sh -c 'echo x >> "$SECURE_PROJECT_ROOT/.git/config"'
 expect_failure "$secure_run" --offline sh -c 'echo x > "$SECURE_PROJECT_ROOT/scripts/secure-run"'
 
+parent_uts="$(stat -Lc %i /proc/self/ns/uts)"
+parent_mnt="$(stat -Lc %i /proc/self/ns/mnt)"
+parent_ipc="$(stat -Lc %i /proc/self/ns/ipc)"
+expect_success "$secure_run" --offline sh -c \
+  "test \"\$(stat -Lc %i /proc/self/ns/uts)\" != '$parent_uts'"
+expect_success "$secure_run" --offline sh -c \
+  "test \"\$(stat -Lc %i /proc/self/ns/mnt)\" != '$parent_mnt'"
+expect_success "$secure_run" --offline sh -c \
+  "test \"\$(stat -Lc %i /proc/self/ns/ipc)\" != '$parent_ipc'"
+expect_success "$secure_run" --offline sh -c \
+  'test "$(id -u)" = 1000 && test "$(id -g)" = 1000'
+expect_success "$secure_run" --offline sh -c \
+  "test \"\$(awk '/^CapEff:/ { print \$2 }' /proc/self/status)\" = 0000000000000000"
+expect_success "$secure_run" --offline sh -c \
+  "test \"\$(awk '/^NoNewPrivs:/ { print \$2 }' /proc/self/status)\" = 1"
+expect_success "$secure_run" --offline python3 -c \
+  'import ctypes; f=ctypes.CDLL(None,use_errno=True); f.syscall(321,0,0,0,0,0,0); raise SystemExit(ctypes.get_errno()!=1)'
+expect_success "$secure_run" --offline python3 -c \
+  'import ctypes; f=ctypes.CDLL(None,use_errno=True); f.syscall(250,0,0,0,0,0,0); raise SystemExit(ctypes.get_errno()!=1)'
+expect_success "$secure_run" --offline python3 -c \
+  'import ctypes; f=ctypes.CDLL(None,use_errno=True); f.syscall(101,0,0,0,0,0,0); raise SystemExit(ctypes.get_errno()!=1)'
+
+node "$project_root/scripts/verify-bubblewrap-security.mjs"
 node --test "$project_root/.devcontainer/egress-proxy.test.mjs"
+node --test "$project_root/.devcontainer/dns-filter.test.mjs"
 
 echo "Security regression checks passed."

@@ -6,22 +6,34 @@ services:
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
-    command: sleep infinity
+    entrypoint: /opt/secure-template/devcontainer-entrypoint
+    command:
+      - sleep
+      - infinity
     init: true
-    user: node
+    user: root
+    depends_on:
+      dns-filter:
+        condition: service_healthy
     volumes:
       # workspaceは開発に必要なためbindする。秘密情報はこのフォルダーへ置かない。
       - ..:/workspaces/template-project:cached
       - agent-session-history:/home/node/.vscode-server/data/User/workspaceStorage
       - copilot-session-history:/home/node/.copilot/session-state
     networks:
-      - sandbox
+      sandbox:
     security_opt:
       # capability除去だけでなく、特権化と機密syscallを抑える。
       - no-new-privileges:true
       - seccomp=./bubblewrap-seccomp.json
     cap_drop:
       - ALL
+    cap_add:
+      - NET_ADMIN
+      # entrypointがnodeへ降格した後、setprivのbounding setからすべて除去する。
+      - SETUID
+      - SETGID
+      - SETPCAP
     cpus: "2.0"
     # ここで資源上限を設け、命令単位の制限だけでなく暴走時の影響をDocker側でも抑える。
     mem_limit: 4g
@@ -34,6 +46,34 @@ services:
     devices:
       # Bubblewrap/slirp4netnsのnetwork namespace利用に必要。必要性を変えた場合は再評価する。
       - /dev/net/tun:/dev/net/tun
+
+  dns-filter:
+    # Exact allowlistでのみDocker内DNSを参照させ、DNSトンネリングを遮断する。
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    command:
+      - node
+      - /opt/secure-template/dns-filter.mjs
+    init: true
+    user: node
+    read_only: true
+    tmpfs:
+      - /tmp
+    networks:
+      sandbox:
+    healthcheck:
+      test: ["CMD", "node", "/opt/secure-template/dns-filter.mjs", "--healthcheck"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 5s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
 
   egress-proxy:
     # sandboxとegressを結ぶ唯一の境界。外向き接続と3000番の中継だけを担当する。

@@ -9,6 +9,7 @@ import {
   setupSharedAgent,
   validateRepositoryUrl,
 } from './setup-shared-agent.mjs';
+import { loadSharedAgentPolicy } from './verify-shared-agent.mjs';
 
 function git(root, args) {
   const result = spawnSync('git', args, {
@@ -112,6 +113,11 @@ test('is idempotent across .git URL spelling', async () => {
     await readFile(path.join(root, '.github/copilot-instructions.md'), 'utf8'),
     /Local[\s\S]*Shared/,
   );
+  assert.deepEqual(await loadSharedAgentPolicy(root), {
+    path: '.github/shared',
+    url: publicUrl,
+    commit: first.commit,
+  });
 });
 
 test('repairs a .gitmodules entry without a gitlink', async () => {

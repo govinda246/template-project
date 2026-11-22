@@ -30,10 +30,22 @@ const devcontainer = config.services.devcontainer;
 const proxy = config.services['egress-proxy'];
 
 assert.deepEqual(devcontainer.cap_drop, ['ALL']);
+assert.deepEqual(devcontainer.cap_add, [
+  'NET_ADMIN',
+  'SETUID',
+  'SETGID',
+  'SETPCAP',
+]);
 assert.equal(Boolean(devcontainer.privileged), false);
 assert.ok(devcontainer.security_opt.includes('no-new-privileges:true'));
 assert.equal(devcontainer.network_mode, undefined);
 assert.deepEqual(devcontainer.networks, { sandbox: null });
+assert.equal(
+  Array.isArray(devcontainer.entrypoint)
+    ? devcontainer.entrypoint[0]
+    : devcontainer.entrypoint,
+  '/opt/secure-template/devcontainer-entrypoint',
+);
 assert.equal(
   devcontainer.volumes.some(({ source }) => source === '/var/run/docker.sock'),
   false,
@@ -43,16 +55,18 @@ assert.equal(proxy.read_only, true);
 assert.deepEqual(proxy.cap_drop, ['ALL']);
 assert.ok(proxy.security_opt.includes('no-new-privileges:true'));
 assert.deepEqual(proxy.networks, { sandbox: null, egress: null });
-assert.equal(
-  proxy.ports.some(
-    ({ host_ip, published, target }) =>
-      Number(published) >= 1024 &&
-      Number(published) <= 65535 &&
-      host_ip === '127.0.0.1' &&
-      target === 3000,
-  ),
-  true,
-);
+assert.equal((proxy.ports ?? []).length, 0);
+
+const dnsFilter = config.services['dns-filter'];
+assert.equal(dnsFilter.read_only, true);
+assert.deepEqual(dnsFilter.cap_drop, ['ALL']);
+assert.deepEqual(dnsFilter.cap_add, ['NET_BIND_SERVICE']);
+assert.ok(dnsFilter.security_opt.includes('no-new-privileges:true'));
+assert.ok(dnsFilter.healthcheck.test.includes('--healthcheck'));
+assert.deepEqual(devcontainer.depends_on['dns-filter'], {
+  condition: 'service_healthy',
+  required: true,
+});
 
 assert.equal(config.networks.sandbox.internal, true);
 

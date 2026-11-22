@@ -1,11 +1,12 @@
 import { spawnSync } from 'node:child_process';
-import { access, readdir, rm, stat } from 'node:fs/promises';
+import { access, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { syncSharedAgent } from './sync-shared-agent.mjs';
 
 const SUBMODULE_PATH = '.github/shared';
+const POLICY_PATH = '.github/shared-agent-policy.json';
 
 function parseArgs(args) {
   const options = { url: '', branch: '' };
@@ -245,11 +246,20 @@ export async function setupSharedAgent(root, options) {
   }
 
   await verifySharedAgentContract(root);
+  const commit = git(root, ['rev-parse', 'HEAD'], target);
+  await writeFile(
+    path.join(root, POLICY_PATH),
+    `${JSON.stringify({
+      path: SUBMODULE_PATH,
+      url,
+      commit,
+    }, null, 2)}\n`,
+  );
   const synced = await syncSharedAgent(root);
   return {
     path: SUBMODULE_PATH,
     instructions: synced.instructions,
-    commit: git(root, ['rev-parse', 'HEAD'], target),
+    commit,
   };
 }
 
@@ -269,6 +279,7 @@ export async function removeSharedAgent(root, options = {}) {
     }
     await rm(target, { recursive: true, force: true });
   }
+  await rm(path.join(root, POLICY_PATH), { force: true });
   await syncSharedAgent(root);
 }
 

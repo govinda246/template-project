@@ -23,8 +23,12 @@ jobs:
       - name: Checkout
         # タグではなくcommit SHA固定でAction内容の追従変更を防ぐ。
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          submodules: recursive
+      - name: Verify shared Agent pin before checkout
+        run: node scripts/verify-shared-agent.mjs --pre-checkout
+      - name: Checkout pinned shared Agent
+        run: |
+          git submodule update --init --recursive
+          node scripts/verify-shared-agent.mjs
       - name: Synchronize shared Agent files
         run: node scripts/sync-shared-agent.mjs
       - name: Install dependencies without lifecycle scripts
@@ -39,11 +43,21 @@ jobs:
       - name: Run tests
         run: npm test
       - name: Run bootstrap tests
-        run: node --test scripts/init-project.test.mjs scripts/setup-shared-agent.test.mjs scripts/sync-shared-agent.test.mjs
+        run: node --test scripts/init-project.test.mjs scripts/setup-shared-agent.test.mjs scripts/sync-shared-agent.test.mjs scripts/verify-shared-agent.test.mjs
       - name: Run proxy security tests
-        run: node --test .devcontainer/egress-proxy.test.mjs
+        run: node --test .devcontainer/egress-proxy.test.mjs .devcontainer/dns-filter.test.mjs
       - name: Verify resolved Compose security controls
         run: node scripts/verify-compose-security.mjs
+      - name: Verify Bubblewrap seccomp policy
+        run: node scripts/verify-bubblewrap-security.mjs
+      - name: Verify effective Copilot and VS Code settings
+        run: node --test scripts/verify-vscode-settings.test.mjs
+      - name: Test egress audit parser
+        run: node --test scripts/audit-egress-logs.test.mjs
+      - name: Verify repository VS Code settings
+        run: node scripts/verify-vscode-settings.mjs
+      - name: Verify DNS containment in Compose
+        run: node scripts/verify-dns-security.mjs
       - name: Build
         run: npm run build
       - name: Verify lockfile

@@ -24,12 +24,23 @@ RUN apt-get update \
     && chown -R node:node /home/node/.copilot /home/node/.vscode-server
 
 # Agentから書き換えられないtrusted pathへ、proxyとallowlistをroot所有で配置する。
-COPY --chown=root:root .devcontainer/egress-proxy.mjs .devcontainer/egress-allowlist.txt /opt/secure-template/
-COPY --chown=root:root --chmod=0755 scripts/secure-run scripts/secure-shell /opt/secure-template/
+COPY --chown=root:root \
+    .devcontainer/dns-filter.mjs \
+    .devcontainer/egress-proxy.mjs \
+    .devcontainer/egress-allowlist.txt \
+    /opt/secure-template/
+COPY --chown=root:root --chmod=0755 \
+    scripts/devcontainer-entrypoint \
+    scripts/secure-run \
+    scripts/secure-shell \
+    /opt/secure-template/
 
 RUN chown -R root:root /opt/secure-template \
     && chmod 0755 /opt/secure-template \
-    && chmod 0644 /opt/secure-template/egress-proxy.mjs /opt/secure-template/egress-allowlist.txt
+    && chmod 0644 \
+        /opt/secure-template/dns-filter.mjs \
+        /opt/secure-template/egress-proxy.mjs \
+        /opt/secure-template/egress-allowlist.txt
 
 # 直接接続ではなく、sandbox内のallowlist付きproxyを経由させる既定値。
 ENV HTTP_PROXY=http://egress-proxy:3128

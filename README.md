@@ -1,6 +1,6 @@
 # Secure Phaser Template
 
-TypeScript、Vite、Phaser 3 を使う最小2Dブラウザーゲーム基盤です。Dev Containerは既定で外部ネットワークから隔離され、必要なHTTPS通信だけをallowlist付きCONNECTプロキシへ渡します。開発コマンドはBubblewrap内で実行します。
+TypeScript、Vite、Phaser 4 を使う最小2Dブラウザーゲーム基盤です。Dev Containerは既定で外部ネットワークから隔離され、必要なHTTPS通信だけをallowlist付きCONNECTプロキシへ渡します。開発コマンドはBubblewrap内で実行します。
 
 初心者向け概要は [GitHub Pages](https://govinda246.github.io/template-project/) に、制限・残存リスク・緩和方法・改善案は [詳細セキュリティ資料](https://govinda246.github.io/template-project/security-details.html) に分けています。`docs/` を更新すると、GitHub Actionsで自動公開されます。
 
@@ -26,8 +26,9 @@ Dockerデーモンが稼働していない場合はDev Containerを再ビルド�
 
 - devコンテナは`internal: true`の`sandbox`ネットワークだけに接続します。
 - egress proxyだけが`sandbox`と外部側の`egress`ネットワークへ接続します。
-- Docker socket、privileged、host network/PID/IPC、追加capabilityを公開しません。
-- `node`ユーザー、read-only proxy、`cap_drop: ALL`、`no-new-privileges`を使用します。
+- Docker socket、privileged、host network/PID/IPCは公開しません。
+- devcontainerは起動時のDNS・UID/GID設定だけに`NET_ADMIN`、`SETUID`、`SETGID`、`SETPCAP`を使用し、entrypoint直後に`node`へ降格して全capabilityを除去します。proxyとDNS filterは`cap_drop: ALL`で動作します。
+- read-only proxy / DNS filter、`no-new-privileges`、seccomp deny-by-defaultを使用します。
 - CopilotのAgent sandboxはBubblewrapで動作し、`slirp4netns`、`iptables`、TUNデバイスを利用できる構成です。
 
 ### ネットワーク
@@ -45,13 +46,20 @@ devコンテナから直接インターネットへ出るdefault routeはあり�
 - `github.gallerycdn.vsassets.io`
 - `dbaeumer.gallerycdn.vsassets.io`
 - `esbenp.gallerycdn.vsassets.io`
-- `mobile.events.data.microsoft.com`
-
 - `api.individual.githubcopilot.com`
 - `api.githubcopilot.com`
 - `copilot-proxy.githubusercontent.com`
 
 正規の許可先以外、平文HTTP、ポート443以外は拒否されます。HTTPS内容は復号しません。変更は[egress-allowlist.txt](.devcontainer/egress-allowlist.txt)で行い、Dev Containerを再ビルドしてください。allowlistはイメージに組み込まれるため、プロキシの再起動だけでは変更は反映されません。
+
+拒否されたCONNECTはegress-proxyの標準エラーログへ記録されます。Node.jsとDocker CLIの両方が使えるホスト側から、次のように直近の拒否先と件数を監査できます。Dev Container内にDocker CLIやsocketは公開していないため、このスクリプト自体はコンテナ内では実行できません。
+
+```sh
+node scripts/audit-egress-logs.mjs
+node scripts/audit-egress-logs.mjs --since 7d
+```
+
+Composeの`json-file`ログはコンテナごとに10 MBではなく、egress proxyでは5 MBを3世代保持します。コンテナの再作成前に監査し、保持期間を越える証跡が必要な場合はホストまたはCIのログ収集基盤へ転送してください。`403 denied CONNECT`は拒否成功、`502 upstream failure`はallowlist拒否ではなく上流経路・DNSの障害候補として分けて確認します。
 
 ### Bubblewrap
 
@@ -244,7 +252,8 @@ git commit -m "Initialize project"
 
 共有AgentリポジトリURLは`Initialize project`へ任意で指定できます。指定した場合、
 初期化処理が`.github/shared`のサブモジュール登録、commitの固定、contract検証、
-instructionsの同期まで一度で完了します。
+instructionsの同期まで一度で完了し、承認URL・commitを
+`.github/shared-agent-policy.json`へ保存します。
 
 共有Agentリポジトリは次の契約を持つ必要があります。
 
@@ -270,9 +279,8 @@ Gitサブモジュールは`.github/shared`へ追加され、Gitが参照commit�
 以前の`shared-*`生成物があれば削除します。Agent定義とSkillは
 `.vscode/settings.json`から`.github/agents`、`.github/shared/agents`、
 `.github/shared/skills`を直接検索対象にします。
-`.github/agents/game-conductor.agent.md`は、依頼分類、工程管理、hook実行、
-専門Agentへの委譲を担当するプロジェクトの窓口です。共有Agentパックの`bin/`は
-セキュアランナーのPATHへ追加されます。
+共有Agentパックの`bin/`は、セキュアランナーのPATHへ追加されません。現契約では
+`.gitkeep`以外のファイルまたは実行可能ファイルがあれば、検証が失敗します。
 
 通常の更新では、次の順でサブモジュールのcommitを明示的にレビューします。
 
@@ -280,8 +288,10 @@ Gitサブモジュールは`.github/shared`へ追加され、Gitが参照commit�
 git -C .github/shared fetch
 git -C .github/shared checkout <reviewed-commit>
 npm run sync-shared-agent
-git add .github/shared
+# .github/shared-agent-policy.jsonのcommitもreviewed-commitへ更新
+git add .github/shared .github/shared-agent-policy.json
 git commit
+node scripts/verify-shared-agent.mjs
 ```
 
 共有リポジトリは固定commitのコードとして扱い、URL、差分、実行ファイルを
@@ -328,26 +338,37 @@ powershell -NoProfile -ExecutionPolicy Bypass -File $runner --project-path $PWD 
 
 ローカルでは次を順に実行します。
 
+Dev Container内:
+
 ```sh
 bash scripts/check-versions.sh
 npm ci --ignore-scripts
 npm run typecheck
 npm test
 node --test scripts/*.test.mjs
-node --test .devcontainer/egress-proxy.test.mjs
-node scripts/verify-compose-security.mjs
+node --test .devcontainer/egress-proxy.test.mjs .devcontainer/dns-filter.test.mjs
+node scripts/verify-shared-agent.mjs
+node scripts/verify-bubblewrap-security.mjs
+node scripts/verify-vscode-settings.mjs
 npm run build
 bash scripts/verify-security.sh
 ```
 
-`verify-compose-security.mjs`はホストまたはCIでDocker Composeの解決後設定を検査します。Dev Container内にDocker socketを公開していないため、Dev Container内では実行できません。`verify-security.sh`はコンテナ内のBubblewrap実効挙動を検査するため、Dev Container内でのみ実行してください。
+Node.jsとDocker CLIの両方があるホストまたはCI:
+
+```sh
+node scripts/verify-compose-security.mjs
+node scripts/verify-dns-security.mjs
+```
+
+`verify-compose-security.mjs`はDocker Composeの解決後設定を、`verify-dns-security.mjs`はCompose統合環境でDNS封じ込めを検査します。Dev Container内にDocker socketを公開していないため、これらはホストまたはCIで実行します。`verify-security.sh`はコンテナ内のBubblewrap実効挙動を検査するため、Dev Container内でのみ実行してください。
 
 ## バージョン固定
 
 - Node.js: `22.16.0`
 - npm: `10.9.2`
 - ベースイメージ: `mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm` の multi-arch digest
-- Phaser: `3.90.0`
+- Phaser: `4.2.1`
 - Vite: `8.3.8`
 - TypeScript: `7.0.2`
 - Vitest: `5.1.1`
@@ -370,7 +391,7 @@ bash scripts/verify-security.sh
 - `Operation not permitted`がBubblewrapで発生する: ホストで非特権user namespaceが有効か、Dockerのseccompプロファイルが読み込まれているか確認します。
 - npmでネットワークエラーになる: egress proxyが起動中か、対象ホストがallowlistに完全一致するか確認します。
 - 許可していないサイトに接続できてしまう: devコンテナが`sandbox`以外のDockerネットワークへ接続されていないか`docker inspect`で確認します。
-- 初期化後のフロントエンドポートが利用できない: `Initialize project`タスクで別のホストポートを指定して再初期化するか、Docker Composeのloopback bindポートを変更します。
+- 初期化後のフロントエンドポートが利用できない: VS Codeの「ポート」ビューで`egress-proxy:3000`の転送を確認し、必要なら転送ポートを変更してURLを開き直します。
 - VS Code拡張が未対応になる: 固定したVS Code本体と拡張版の組み合わせを更新します。未知の設定を黙って無視せず、出力ログを確認します。
 - GitHub Copilotで無料モデルだけが表示される: まずDev Container外の同じVS Code・同じGitHubアカウントでも表示状況を比較してください。外でも表示されず、Copilot Chatは動作するがエラーも出ない場合は、コンテナの通信遮断よりGitHub側の契約・利用可能モデル・premium requestの枠・アカウント切り替えを確認してください。外では表示されるがDev Container内だけ表示されない場合は、コンテナを再ビルドし、拡張機能ビューで`GitHub Copilot`と`GitHub Copilot Chat`が有効か確認します。モデル取得や送信時のブロック先はegress proxyのログで`403 denied CONNECT`として確認できます。不足ホストは通信内容と必要性を確認してからallowlistへ完全一致で追加してください。`502 upstream failure`はallowlistではなくDNS・経路・上流接続の問題です。
 

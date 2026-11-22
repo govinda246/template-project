@@ -320,8 +320,8 @@
     <main class="wrap">
       <section>
         <h2>30秒で分かる構成</h2>
-        <p class="lead">開発作業と外部通信を担当する2つのコンテナに分けています。</p>
-        <div class="flow" aria-label="コンテナ構成">
+        <p class="lead">開発、DNS検査、外部通信を担当する3つのコンテナに分けています。</p>
+        <div class="flow" aria-label="ゲーム画面の転送経路">
           <span>ローカルPC<br /><small>VS Code・ブラウザー</small></span>
           <span class="arrow" aria-hidden="true">→</span>
           <span>egress-proxy<br /><small>通信の確認と中継</small></span>
@@ -340,6 +340,11 @@
             <p>許可されたHTTPS先だけを中継し、ゲーム画面もローカルPCへ転送します。</p>
           </article>
           <article class="card">
+            <span class="tag blue">名前解決</span>
+            <h3>dns-filter</h3>
+            <p>許可リストと一致するDNS名だけを上流へ転送し、Docker内部DNSへの迂回も遮断します。</p>
+          </article>
+          <article class="card">
             <span class="tag orange">分離</span>
             <h3>Bubblewrap</h3>
             <p>コマンドごとにプロセス空間を分離し、重要フォルダーを読み取り専用にします。</p>
@@ -354,7 +359,7 @@
             <span class="tag green">主な防御</span>
             <ul class="points">
               <li>許可リスト外の外部通信を拒否</li>
-              <li>Docker socketと追加権限を非公開</li>
+              <li>Docker socketを非公開。起動時capabilityはentrypoint後に全て除去</li>
               <li>GitHub・クラウドの資格情報を渡さない</li>
               <li><code>.git</code>や信頼スクリプトを読み取り専用にする</li>
               <li>端末・編集を手動承認で実行</li>
@@ -405,7 +410,11 @@ npm run dev</pre>
             <div class="commands">
               <pre>bash scripts/verify-security.sh</pre>
             </div>
-            <p>再構築後にセキュリティ検証を実行し、その後<code>npm run dev</code>でゲームを確認します。</p>
+            <p>
+              再構築後にコンテナ内でセキュリティ検証を実行します。DNSのCompose統合検証は
+              Node.jsとDocker CLIがあるホスト側で<code>node scripts/verify-dns-security.mjs</code>を
+              実行し、その後<code>npm run dev</code>でゲームを確認します。
+            </p>
           </article>
         </div>
         <div class="note" style="margin-top: 1rem">
