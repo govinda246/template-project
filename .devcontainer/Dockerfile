@@ -27,14 +27,22 @@ RUN apt-get update \
     && case "$(node --version)" in "v${EXPECTED_NODE_MAJOR}."*) ;; *) exit 1 ;; esac \
     && case "$(npm --version)" in "${EXPECTED_NPM_MAJOR}."*) ;; *) exit 1 ;; esac \
     && npm install \
-        --prefix /usr/local/lib/node_modules/npm \
+        --prefix /tmp/npm-security-patches \
         --ignore-scripts \
-        --no-save \
         --package-lock=false \
         brace-expansion@5.0.11 \
         undici@6.29.1 \
-    && test -d /usr/local/lib/node_modules/npm/node_modules/brace-expansion \
-    && test -d /usr/local/lib/node_modules/npm/node_modules/undici \
+    && test "$(node -p "require('/tmp/npm-security-patches/node_modules/brace-expansion/package.json').version")" = "5.0.11" \
+    && test "$(node -p "require('/tmp/npm-security-patches/node_modules/undici/package.json').version")" = "6.29.1" \
+    && rm -rf \
+        /usr/local/lib/node_modules/npm/node_modules/brace-expansion \
+        /usr/local/lib/node_modules/npm/node_modules/undici \
+    && cp -a \
+        /tmp/npm-security-patches/node_modules/brace-expansion \
+        /tmp/npm-security-patches/node_modules/undici \
+        /usr/local/lib/node_modules/npm/node_modules/ \
+    && rm -rf /tmp/npm-security-patches \
+    && npm --version \
     && mkdir -p \
         /home/node/.copilot/session-state \
         /home/node/.vscode-server/data/agentSessionData \
