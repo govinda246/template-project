@@ -7,7 +7,7 @@
   "workspaceFolder": "/workspaces/github_agent_test",
   "remoteUser": "node",
   "shutdownAction": "stopCompose",
-  "postCreateCommand": "git submodule update --init --recursive && node scripts/sync-shared-agent.mjs",
+  "postCreateCommand": "git config --global --replace-all safe.directory /workspaces/github_agent_test && git submodule update --init --recursive && node scripts/sync-shared-agent.mjs",
   "forwardPorts": ["egress-proxy:3000"],
   "customizations": {
     "vscode": {
