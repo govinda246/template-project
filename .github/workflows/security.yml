@@ -83,6 +83,29 @@ jobs:
           skip-dirs: .git,node_modules
           format: cyclonedx
           output: trivy-sbom.cdx.json
+      - name: Block fixable dependency vulnerabilities
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln
+          skip-dirs: .git,node_modules
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+          output: trivy-fixable-dependencies.txt
+      - name: Block fixable Dev Container vulnerabilities
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: secure-template-devcontainer:ci
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+          output: trivy-fixable-devcontainer.txt
       - name: Upload Trivy reports
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -91,14 +114,16 @@ jobs:
           path: |
             trivy-repository-security.sarif
             trivy-dependencies.txt
+            trivy-fixable-dependencies.txt
             trivy-devcontainer.txt
+            trivy-fixable-devcontainer.txt
             trivy-sbom.cdx.json
           if-no-files-found: warn
           retention-days: 30
       - name: Run tests
         run: npm test
       - name: Run bootstrap tests
-        run: node --test scripts/init-project.test.mjs scripts/setup-shared-agent.test.mjs scripts/sync-shared-agent.test.mjs scripts/verify-shared-agent.test.mjs
+        run: node --test scripts/init-project.test.mjs scripts/setup-shared-agent.test.mjs scripts/sync-shared-agent.test.mjs scripts/verify-shared-agent.test.mjs scripts/verify-trivy-policy.test.mjs
       - name: Run proxy security tests
         run: node --test .devcontainer/egress-proxy.test.mjs .devcontainer/dns-filter.test.mjs
       - name: Verify resolved Compose security controls

@@ -367,7 +367,12 @@ bash scripts/verify-security.sh
 
 GitHub Actionsのsecurity workflowでは、`npm audit`を維持しつつTrivyも実行します。
 filesystemのHigh/Critical設定ミスと秘密情報はCIを失敗させ、既存環境への影響を確認するため
-lockfileとDev ContainerイメージのHigh/Critical脆弱性レポートは当面、失敗ゲートにせず記録します。
+lockfileとDev ContainerイメージのHigh/Critical脆弱性については、修正版が公開済みの検出を
+失敗ゲートにします。未修正、修正延期、`will_not_fix`の検出はgateから除外しますが、
+`trivy-dependencies.txt`と`trivy-devcontainer.txt`には引き続き全件を記録します。
+gate専用の結果は`trivy-fixable-dependencies.txt`と
+`trivy-fixable-devcontainer.txt`へ保存します。未修正CVEを一括ignoreしません。
+例外が必要な場合は、CVE、対象、利用経路、根拠、見直し期限を記録して個別判断します。
 CycloneDX SBOMはCI workspaceの`trivy-sbom.cdx.json`へ生成されます。
 
 Node.jsとDocker CLIの両方があるホストまたはCI:
