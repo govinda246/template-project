@@ -9,8 +9,6 @@
         "scripts/init-project.mjs",
         "--name",
         "${input:projectName}",
-        "--host-port",
-        "${input:hostPort}",
         "--shared-agent-url",
         "${input:sharedAgentRepository}"
       ],
@@ -138,12 +136,6 @@
       "id": "projectName",
       "type": "promptString",
       "description": "New project name (lowercase kebab-case)"
-    },
-    {
-      "id": "hostPort",
-      "type": "promptString",
-      "description": "ホスト側のフロントエンド公開ポート（同時起動する場合は別のポート）",
-      "default": "3100"
     },
     {
       "id": "sharedAgentRepository",

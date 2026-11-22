@@ -29,12 +29,12 @@ async function createProjectFixture() {
     '.devcontainer/devcontainer.json':
       JSON.stringify({ workspaceFolder: `/workspaces/${templateRoot}` }),
     '.devcontainer/docker-compose.yml':
-      `name: ${packageName}\nsource: /workspaces/${templateRoot}\nports:\n  - "127.0.0.1:3000:3000"`,
+      `name: ${packageName}\nsource: /workspaces/${templateRoot}`,
     '.devcontainer/Dockerfile':
       `ENV SECURE_PROJECT_ROOT=/workspaces/${templateRoot}`,
     'index.html': `<title>${templateTitle}</title>`,
     'README.md':
-      `# ${templateTitle}\n\nTypeScript, Vite, Phaser sample.\n\nゲームは<http://127.0.0.1:3000>で確認できます。ホストの3000番はegress proxyの127.0.0.1 bindへだけ公開され、そこから\`sandbox\`ネットワーク内のViteへ転送されます。ゲーム本体は外部通信しません。\n\n初心者向け概要は [GitHub](${templateRepository}) にあります。` +
+      `# ${templateTitle}\n\nTypeScript, Vite, Phaser sample.\n\nゲームはVS Codeのポートビューで確認できます。egress proxyを通して\`sandbox\`ネットワーク内のViteへ転送されます。ゲーム本体は外部通信しません。\n\n初心者向け概要は [GitHub](${templateRepository}) にあります。` +
       '`docs/` を更新すると、GitHub Actionsで自動公開されます。\n',
     'docs/index.html': 'template',
     '.github/workflows/pages.yml': 'pages',
@@ -82,56 +82,12 @@ test('updates project identity and removes sample template content', async () =>
     await readFile(path.join(root, 'src/scenes/GameScene.ts'), 'utf8'),
     /My New Game/,
   );
-  assert.match(
+  assert.doesNotMatch(
     await readFile(path.join(root, '.devcontainer/docker-compose.yml'), 'utf8'),
-    /127\.0\.0\.1:3100:3000/,
-  );
-  assert.match(
-    await readFile(path.join(root, 'README.md'), 'utf8'),
-    /http:\/\/127\.0\.0\.1:3100/,
-  );
-  assert.match(
-    await readFile(path.join(root, 'README.md'), 'utf8'),
-    /ホストの3100番/,
+    /\bports:/,
   );
   await assert.rejects(readFile(path.join(root, 'src/game/player.ts')));
   await assert.rejects(readFile(path.join(root, 'docs/index.html')));
-});
-
-test('allows an alternate loopback host port during initialization', async () => {
-  const root = await createProjectFixture();
-
-  await initializeProject(root, {
-    name: 'another-project',
-    allowDirty: true,
-    hostPort: '4317',
-  });
-
-  assert.match(
-    await readFile(path.join(root, '.devcontainer/docker-compose.yml'), 'utf8'),
-    /127\.0\.0\.1:4317:3000/,
-  );
-  assert.match(
-    await readFile(path.join(root, 'README.md'), 'utf8'),
-    /http:\/\/127\.0\.0\.1:4317/,
-  );
-});
-
-test('rejects invalid host ports before changing project files', async () => {
-  const root = await createProjectFixture();
-
-  await assert.rejects(
-    initializeProject(root, {
-      name: 'another-project',
-      allowDirty: true,
-      hostPort: '3000;other',
-    }),
-    /Host port must be an integer between 1024 and 65535/,
-  );
-  assert.match(
-    await readFile(path.join(root, '.devcontainer/docker-compose.yml'), 'utf8'),
-    /127\.0\.0\.1:3000:3000/,
-  );
 });
 
 async function createSharedRepositoryFixture() {

@@ -765,13 +765,13 @@
         <h2>まず、全体像をつかむ</h2>
         <p class="lead">
           この環境は「ゲームを作る部屋」と「外との出入口を管理する門番」の2つが中心です。
-          ブラウザーはlocalhostの3000番へ入り、門番を通ってゲーム画面に届きます。
+          ブラウザーはVS Codeが割り当てたローカルポートへ入り、門番を通ってゲーム画面に届きます。
         </p>
         <div class="diagram" aria-label="コンテナ構成図">
           <div class="node browser">
             <span class="tag blue">ローカルPC</span>
             <h3>ブラウザーとVS Code</h3>
-            <p>ゲーム表示: <code>127.0.0.1:3000</code><br />ソースコード編集: VS Code</p>
+            <p>ゲーム表示: VS Codeの転送ポート<br />ソースコード編集: VS Code</p>
           </div>
           <div class="arrow">
             <div>⇄<small>必要な通信だけ</small></div>
@@ -813,7 +813,7 @@
             <span class="tag green">通信担当</span>
             <h3>egress-proxy</h3>
             <ul>
-              <li>PCの3000番からdevcontainerのViteへ中継</li>
+              <li>VS Codeの転送ポートからdevcontainerのViteへ中継</li>
               <li>外向き通信のホスト名を検査</li>
               <li>HTTPSの443番だけを許可</li>
               <li>許可対象は <code>egress-allowlist.txt</code> で管理</li>
@@ -832,7 +832,7 @@
             <ol class="flow">
               <li>
                 <strong>ブラウザーがlocalhostへアクセス</strong>
-                <p><code>http://127.0.0.1:3000</code> を開きます。</p>
+                <p>VS Codeの「ポート」ビューに表示される転送URLを開きます。</p>
               </li>
               <li>
                 <strong>egress-proxyの3000番が受け取る</strong>
@@ -1492,8 +1492,8 @@ npm run build</pre>
           </article>
         </div>
         <p class="lead" style="margin-top: 1rem">
-          すべての共通の最終確認先は
-          <a href="http://127.0.0.1:3000">http://127.0.0.1:3000</a> です。
+          すべての共通の最終確認先は、VS Codeの「ポート」ビューに表示される
+          <code>egress-proxy:3000</code> の転送URLです。
         </p>
         <ol class="flow">
           <li>

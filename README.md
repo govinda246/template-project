@@ -170,7 +170,7 @@ npm test
 npm run build
 ```
 
-ゲームは<http://127.0.0.1:3000>で確認できます。ホストの3000番はegress proxyの127.0.0.1 bindへだけ公開され、そこから`sandbox`ネットワーク内のViteへ転送されます。ゲーム本体は外部通信しません。
+ゲームはVS Codeの「ポート」ビューに表示される`egress-proxy:3000`の転送先から確認できます。VS Codeが空いているローカルポートへ自動転送するため、Dockerの固定ホストポートとは競合しません。その転送先から`sandbox`ネットワーク内のViteへ中継されます。ゲーム本体は外部通信しません。
 
 ## このテンプレートから新プロジェクトを作成
 
@@ -209,10 +209,10 @@ git init -b main
 git remote add origin https://github.com/OWNER/my-project.git
 ```
 
-VS Codeの`Tasks: Run Task`から`Initialize project`を選び、プロジェクト名とホスト側の
-公開ポートに加え、任意で共有AgentリポジトリURLを入力します。URLを空欄にすると共有Agentは
-導入しません。ポートの既定値は`3100`です。同時起動するプロジェクトには別のポートを
-指定してください。`.git`がまだ存在しない場合でも初期化できますが、共有Agentを導入する場合は
+VS Codeの`Tasks: Run Task`から`Initialize project`を選び、プロジェクト名と任意の共有
+AgentリポジトリURLを入力します。URLを空欄にすると共有Agentは導入しません。
+ホスト側ポートはVS Codeが競合を回避しながら自動割り当てします。
+`.git`がまだ存在しない場合でも初期化できますが、共有Agentを導入する場合は
 事前に`git init`してください。`git init`直後の未追跡ファイルは
 許可し、初期コミットを持つリポジトリではworktreeがcleanであることを確認します。
 `origin`が設定済みなら、GitHubリポジトリURLを自動検出します。
@@ -220,10 +220,10 @@ VS Codeの`Tasks: Run Task`から`Initialize project`を選び、プロジェク
 同じ処理を端末から実行する場合:
 
 ```sh
-npm run init-project -- --name my-project --host-port 3100 --shared-agent-url https://github.com/OWNER/shared-agent.git
+npm run init-project -- --name my-project --shared-agent-url https://github.com/OWNER/shared-agent.git
 ```
 
-`--host-port`は省略でき、省略時は`3100`を使用します。同じ環境で複数プロジェクトを同時に開く場合は、各プロジェクトに異なるホストポートを指定してください。利用可能な1024〜65535のポートを指定できます。生成されるCompose設定は指定したホストポートをloopbackに公開し、コンテナ内部の3000番へ転送します。`--shared-agent-url`は省略可能です。
+`--shared-agent-url`は省略可能です。フロントエンドのローカルポートはVS Codeのポートビューで自動管理されるため、複数プロジェクトを同時に開く場合も固定ポートを設定する必要はありません。
 
 初期化後は検証して初回コミットを作成します。
 

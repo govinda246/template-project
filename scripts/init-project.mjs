@@ -24,7 +24,6 @@ const TEMPLATE_WORKSPACE = '/workspaces/github_agent_test';
 const TEMPLATE_REPOSITORY = 'https://github.com/govinda246/template-project';
 const TEMPLATE_PAGES = 'https://govinda246.github.io/template-project';
 const TEMPLATE_ROOT_NAME = 'github_agent_test';
-const DEFAULT_HOST_PORT = 3100;
 
 const replacedFiles = [
   'package.json',
@@ -65,7 +64,6 @@ function parseArgs(args) {
     displayName: '',
     repositoryUrl: '',
     sharedAgentUrl: '',
-    hostPort: DEFAULT_HOST_PORT,
     allowDirty: false,
     dryRun: false,
   };
@@ -84,26 +82,12 @@ function parseArgs(args) {
       options.repositoryUrl = args[++index] ?? '';
     } else if (argument === '--shared-agent-url') {
       options.sharedAgentUrl = args[++index] ?? '';
-    } else if (argument === '--host-port') {
-      options.hostPort = args[++index] ?? '';
     } else {
       throw new Error(`Unknown option: ${argument}`);
     }
   }
 
   return options;
-}
-
-function normalizeHostPort(value) {
-  const candidate = String(value ?? DEFAULT_HOST_PORT).trim();
-  if (!/^\d+$/.test(candidate)) {
-    throw new Error('Host port must be an integer between 1024 and 65535.');
-  }
-  const port = Number(candidate);
-  if (!Number.isSafeInteger(port) || port < 1024 || port > 65535) {
-    throw new Error('Host port must be an integer between 1024 and 65535.');
-  }
-  return port;
 }
 
 function runGit(root, args, options = {}) {
@@ -187,13 +171,7 @@ function replaceTemplateIdentity(contents, options) {
     .replaceAll(TEMPLATE_NAME, options.name)
     .replaceAll(TEMPLATE_TITLE, options.displayName)
     .replaceAll(TEMPLATE_ROOT_NAME, options.name)
-    .replaceAll(TEMPLATE_WORKSPACE, `/workspaces/${options.name}`)
-    .replaceAll(
-      '127.0.0.1:3000:3000',
-      `127.0.0.1:${options.hostPort}:3000`,
-    )
-    .replaceAll('http://127.0.0.1:3000', `http://127.0.0.1:${options.hostPort}`)
-    .replaceAll('ホストの3000番', `ホストの${options.hostPort}番`);
+    .replaceAll(TEMPLATE_WORKSPACE, `/workspaces/${options.name}`);
 
   next = next.replace(
     /^初心者向け概要は.*?`docs\/`.*?自動公開されます。\n\n/m,
@@ -288,7 +266,6 @@ export async function initializeProject(root, options) {
     displayName: options.displayName?.trim() || displayNameFromSlug(normalized),
     repositoryUrl: normalizeRepositoryUrl(options.repositoryUrl),
     sharedAgentUrl: String(options.sharedAgentUrl ?? '').trim(),
-    hostPort: normalizeHostPort(options.hostPort),
   };
   if (
     !completeOptions.displayName ||

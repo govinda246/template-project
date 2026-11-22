@@ -55,9 +55,6 @@ services:
     expose:
       - "3128"
       - "3000"
-    ports:
-      # ホスト全体ではなくloopbackだけへ公開し、LANからの直接接続を避ける。
-      - "127.0.0.1:3000:3000"
     environment:
       FRONTEND_PROXY_TARGET: devcontainer
       FRONTEND_PROXY_PORT: "3000"
