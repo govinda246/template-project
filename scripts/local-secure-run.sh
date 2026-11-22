@@ -18,9 +18,6 @@ if [[ ! -d "$project_root" ]]; then
 fi
 project_root="$(cd -- "$project_root" && pwd -P)"
 path_prefix=/usr/local/bin
-if [[ -d "$project_root/.github/shared/bin" ]]; then
-  path_prefix="/workspace/.github/shared/bin:$path_prefix"
-fi
 
 network_args=(--unshare-net)
 if [[ ${1:-} == "--offline" ]]; then

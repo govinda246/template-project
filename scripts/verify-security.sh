@@ -16,6 +16,10 @@ expect_failure() {
 }
 
 expect_success "$secure_run" --offline node -e "process.stdout.write('isolated')"
+expect_success "$secure_run" --offline sh -c \
+  'test "$(command -v node)" = /usr/local/share/nvm/current/bin/node'
+expect_failure "$secure_run" --offline sh -c \
+  'case ":$PATH:" in *":$SECURE_PROJECT_ROOT/.github/shared/bin:"*) exit 0;; *) exit 1;; esac'
 expect_failure "$secure_run" docker ps
 expect_failure "$secure_run" sudo true
 expect_failure "$secure_run" copilot --version

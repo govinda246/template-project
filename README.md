@@ -64,17 +64,31 @@ devコンテナから直接インターネットへ出るdefault routeはあり�
 - ホスト資格情報やDocker socketをマウントしない
 - `copilot`、`gh copilot`、`npx`/`npm exec`によるGitHub Copilot CLI起動、`docker`、`sudo`、`mount`、`nsenter`などの実行を拒否
 - ローカルランナーではネットワークnamespaceを既定で分離し、`--online`指定時だけ共有
+- `.github/shared/bin`をPATHへ追加しない。共有Agentは指示・定義・Skillの入力であり、実行可能コマンドの供給元ではない
+- `typecheck`、`test`、`build`タスクはLinux・Windowsのいずれも`--offline`で実行
 
 初期ターミナルはセキュアシェルです。通常ターミナルの代わりに入力するコマンドはすでにBubblewrap内です。明示的に単発実行する場合は次の形を使います。
 
 ```sh
-/opt/secure-template/secure-run npm run typecheck
+/opt/secure-template/secure-run --offline npm run typecheck
 /opt/secure-template/secure-run --offline node -e "console.log('offline')"
 ```
 
 セキュアシェルは`--interactive`を使い、制御端末とジョブ制御を保持します。通常の単発実行では新しいセッションを作成して分離します。
 
 信頼される`secure-run`と`secure-shell`はイメージ生成時にroot所有で`/opt/secure-template`へ配置されます。VS CodeとCopilotはワークスペース内の同名ファイルを実行しません。コマンド名ブラックリストは利便性のための層であり、Docker socket非公開、capability除去、ファイル権限、ネットワーク分離が主たる防御です。
+
+実行可能ファイルの信頼境界は次のとおりです。`secure-run`とOS・Dev Container由来のシステムパスだけをコマンド検索対象にし、workspaceやサブモジュール配下の実行ファイルは絶対パスでもレビューなしに信頼しません。`/opt/secure-template`のランナーは再ビルド時にroot所有で再配置されるため、workspace内スクリプトを変更しただけでは実効設定は変わりません。
+
+| 種別 | 信頼対象 | Agentへの扱い |
+| --- | --- | --- |
+| 信頼済み実行入口 | `/opt/secure-template/secure-run`、OSのNode/npmパス | workspaceから変更不可 |
+| 実行すべき固定コマンド | `--offline npm run typecheck`、`--offline npm test`、`--offline npm run build` | Agentへ手動承認で委任可能 |
+| workspace由来コード | `src/`、テスト、`package.json`、Vite/TypeScript設定 | 実行されるが信頼しない |
+| 共有Agentサブモジュール | `.github/shared`、`.github/shared/bin` | 指示・定義・Skillとして読み込む。PATHには追加しない |
+| 対象外 | ホストFS、Docker socket、host network、資格情報 | Agentへ公開しない |
+
+Agentによるテスト実行は、VS Codeの`secure: test`タスクを毎回手動承認して委任できます。固定タスク以外の任意シェル、引数付き`npm exec`、`npx`、依存関係導入、Git操作、オンライン実行は自動承認しません。現状でもworkspaceのテスト・設定・ソースは書き込み可能であり、Agentが変更した内容がテストへ渡されるため、`npm test`の無条件な自動承認は信頼境界として扱いません。
 
 ### 制限と正当性
 
@@ -319,6 +333,7 @@ bash scripts/check-versions.sh
 npm ci --ignore-scripts
 npm run typecheck
 npm test
+node --test scripts/*.test.mjs
 node --test .devcontainer/egress-proxy.test.mjs
 node scripts/verify-compose-security.mjs
 npm run build

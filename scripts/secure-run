@@ -54,9 +54,6 @@ path_prefix=/usr/local/share/npm-global/bin
 if [[ -d /usr/local/share/nvm/current/bin ]]; then
   path_prefix="/usr/local/share/nvm/current/bin:$path_prefix"
 fi
-if [[ -d "$project_root/.github/shared/bin" ]]; then
-  path_prefix="$project_root/.github/shared/bin:$path_prefix"
-fi
 # HOMEを空にし、npm等が必要とするcacheだけを明示的な一時領域へbindする。
 home_dir="${TMPDIR:-/tmp}/secure-home-${UID}"
 cache_dir="$home_dir/.cache"

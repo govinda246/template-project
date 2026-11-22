@@ -38,7 +38,7 @@
       "label": "secure: typecheck",
       "type": "shell",
       "command": "/opt/secure-template/secure-run",
-      "args": ["npm", "run", "typecheck"],
+      "args": ["--offline", "npm", "run", "typecheck"],
       "windows": {
         "command": "powershell.exe",
         "args": [
@@ -62,7 +62,7 @@
       "label": "secure: test",
       "type": "shell",
       "command": "/opt/secure-template/secure-run",
-      "args": ["npm", "test"],
+      "args": ["--offline", "npm", "test"],
       "windows": {
         "command": "powershell.exe",
         "args": [
@@ -85,7 +85,7 @@
       "label": "secure: build",
       "type": "shell",
       "command": "/opt/secure-template/secure-run",
-      "args": ["npm", "run", "build"],
+      "args": ["--offline", "npm", "run", "build"],
       "windows": {
         "command": "powershell.exe",
         "args": [
