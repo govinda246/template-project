@@ -48,6 +48,7 @@ jobs:
           scanners: misconfig,secret
           skip-dirs: .git,node_modules
           severity: HIGH,CRITICAL
+          limit-severities-for-sarif: true
           exit-code: "1"
           format: sarif
           output: trivy-repository-security.sarif
