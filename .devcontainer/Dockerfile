@@ -8,6 +8,7 @@ USER root
 
 # Bubblewrap実行とネットワーク分離に必要な最小ツール。Node/npmの期待版もビルド時に固定確認する。
 RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
     && apt-get install -y --no-install-recommends \
         bubblewrap \
         iproute2 \
