@@ -15,6 +15,14 @@ RUN apt-get update \
         iptables \
         slirp4netns \
         util-linux \
+    && apt-get purge -y \
+        libglib2.0-dev \
+        libglib2.0-dev-bin \
+        libsqlite3-dev \
+        libxml2-dev \
+        linux-libc-dev \
+        zlib1g-dev \
+    && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* \
     && case "$(node --version)" in "v${EXPECTED_NODE_MAJOR}."*) ;; *) exit 1 ;; esac \
     && case "$(npm --version)" in "${EXPECTED_NPM_MAJOR}."*) ;; *) exit 1 ;; esac \
