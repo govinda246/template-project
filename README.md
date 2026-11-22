@@ -20,6 +20,10 @@ docker compose version
 
 Dockerデーモンが稼働していない場合はDev Containerを再ビルドできません。
 
+Windowsでは、workspaceを開いたときに`Ensure Docker Desktop`タスクが自動実行されます。Docker
+Desktopが停止している場合は起動し、Engineが応答するまで最大90秒待機します。VS Codeが初回に
+自動タスクの確認を表示したら、このworkspaceだけ`Allow Automatic Tasks in Folder`を許可してください。
+
 ## セキュリティ境界
 
 ### Docker
