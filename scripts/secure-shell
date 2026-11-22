@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-exec /opt/secure-template/secure-run /bin/bash --noprofile --norc
+exec /opt/secure-template/secure-run --interactive /bin/bash --noprofile --norc

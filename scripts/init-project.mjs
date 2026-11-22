@@ -12,6 +12,11 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
+import {
+  removeSharedAgent,
+  setupSharedAgent,
+  validateRepositoryUrl,
+} from './setup-shared-agent.mjs';
 
 const TEMPLATE_NAME = 'secure-phaser-template';
 const TEMPLATE_TITLE = 'Secure Phaser Template';
@@ -19,6 +24,7 @@ const TEMPLATE_WORKSPACE = '/workspaces/github_agent_test';
 const TEMPLATE_REPOSITORY = 'https://github.com/govinda246/template-project';
 const TEMPLATE_PAGES = 'https://govinda246.github.io/template-project';
 const TEMPLATE_ROOT_NAME = 'github_agent_test';
+const DEFAULT_HOST_PORT = 3100;
 
 const replacedFiles = [
   'package.json',
@@ -58,6 +64,8 @@ function parseArgs(args) {
     name: '',
     displayName: '',
     repositoryUrl: '',
+    sharedAgentUrl: '',
+    hostPort: DEFAULT_HOST_PORT,
     allowDirty: false,
     dryRun: false,
   };
@@ -74,12 +82,28 @@ function parseArgs(args) {
       options.displayName = args[++index] ?? '';
     } else if (argument === '--repository-url') {
       options.repositoryUrl = args[++index] ?? '';
+    } else if (argument === '--shared-agent-url') {
+      options.sharedAgentUrl = args[++index] ?? '';
+    } else if (argument === '--host-port') {
+      options.hostPort = args[++index] ?? '';
     } else {
       throw new Error(`Unknown option: ${argument}`);
     }
   }
 
   return options;
+}
+
+function normalizeHostPort(value) {
+  const candidate = String(value ?? DEFAULT_HOST_PORT).trim();
+  if (!/^\d+$/.test(candidate)) {
+    throw new Error('Host port must be an integer between 1024 and 65535.');
+  }
+  const port = Number(candidate);
+  if (!Number.isSafeInteger(port) || port < 1024 || port > 65535) {
+    throw new Error('Host port must be an integer between 1024 and 65535.');
+  }
+  return port;
 }
 
 function runGit(root, args, options = {}) {
@@ -163,7 +187,13 @@ function replaceTemplateIdentity(contents, options) {
     .replaceAll(TEMPLATE_NAME, options.name)
     .replaceAll(TEMPLATE_TITLE, options.displayName)
     .replaceAll(TEMPLATE_ROOT_NAME, options.name)
-    .replaceAll(TEMPLATE_WORKSPACE, `/workspaces/${options.name}`);
+    .replaceAll(TEMPLATE_WORKSPACE, `/workspaces/${options.name}`)
+    .replaceAll(
+      '127.0.0.1:3000:3000',
+      `127.0.0.1:${options.hostPort}:3000`,
+    )
+    .replaceAll('http://127.0.0.1:3000', `http://127.0.0.1:${options.hostPort}`)
+    .replaceAll('ホストの3000番', `ホストの${options.hostPort}番`);
 
   next = next.replace(
     /^初心者向け概要は.*?`docs\/`.*?自動公開されます。\n\n/m,
@@ -257,6 +287,8 @@ export async function initializeProject(root, options) {
     name: normalized,
     displayName: options.displayName?.trim() || displayNameFromSlug(normalized),
     repositoryUrl: normalizeRepositoryUrl(options.repositoryUrl),
+    sharedAgentUrl: String(options.sharedAgentUrl ?? '').trim(),
+    hostPort: normalizeHostPort(options.hostPort),
   };
   if (
     !completeOptions.displayName ||
@@ -264,6 +296,12 @@ export async function initializeProject(root, options) {
     /[\u0000-\u001f\u007f]/.test(completeOptions.displayName)
   ) {
     throw new Error('Display name must be 1-80 characters without control characters.');
+  }
+  if (
+    completeOptions.sharedAgentUrl &&
+    !validateRepositoryUrl(completeOptions.sharedAgentUrl)
+  ) {
+    throw new Error('Shared Agent URL must be a valid HTTPS or SSH Git repository URL.');
   }
   assertClean(root, completeOptions.allowDirty);
 
@@ -320,6 +358,7 @@ export class GameScene extends Phaser.Scene {
     return {
       name: completeOptions.name,
       displayName: completeOptions.displayName,
+      sharedAgentUrl: completeOptions.sharedAgentUrl,
       writes: writes.map(({ target }) => path.relative(root, target)),
       removals: removals.map((target) => path.relative(root, target)),
     };
@@ -332,19 +371,28 @@ export class GameScene extends Phaser.Scene {
   for (const target of removals) {
     await rm(target, { recursive: true, force: true });
   }
+  if (completeOptions.sharedAgentUrl) {
+    await setupSharedAgent(root, {
+      url: completeOptions.sharedAgentUrl,
+      replaceExisting: true,
+    });
+  } else if (existsSync(path.join(root, '.git'))) {
+    await removeSharedAgent(root, { force: true });
+  }
 
   return {
     name: completeOptions.name,
     displayName: completeOptions.displayName,
+    sharedAgentUrl: completeOptions.sharedAgentUrl,
     writes: writes.map(({ target }) => path.relative(root, target)),
     removals: removals.map((target) => path.relative(root, target)),
   };
 }
 
-async function promptForName() {
+async function promptForValue(question) {
   const rl = readline.createInterface({ input, output });
   try {
-    return await rl.question('New project name (lowercase kebab-case): ');
+    return await rl.question(question);
   } finally {
     rl.close();
   }
@@ -357,7 +405,16 @@ function isMainModule() {
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   if (!options.name) {
-    options.name = await promptForName();
+    options.name = await promptForValue('New project name (lowercase kebab-case): ');
+  }
+  if (
+    process.stdin.isTTY &&
+    !options.sharedAgentUrl &&
+    !process.argv.slice(2).includes('--shared-agent-url')
+  ) {
+    options.sharedAgentUrl = await promptForValue(
+      'Shared Agent repository URL (optional, press Enter to skip): ',
+    );
   }
 
   const root = path.resolve(

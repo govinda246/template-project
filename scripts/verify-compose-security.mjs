@@ -45,8 +45,11 @@ assert.ok(proxy.security_opt.includes('no-new-privileges:true'));
 assert.deepEqual(proxy.networks, { sandbox: null, egress: null });
 assert.equal(
   proxy.ports.some(
-    ({ host_ip, published }) =>
-      published === '3000' && host_ip === '127.0.0.1',
+    ({ host_ip, published, target }) =>
+      Number(published) >= 1024 &&
+      Number(published) <= 65535 &&
+      host_ip === '127.0.0.1' &&
+      target === 3000,
   ),
   true,
 );

@@ -72,6 +72,8 @@ devコンテナから直接インターネットへ出るdefault routeはあり�
 /opt/secure-template/secure-run --offline node -e "console.log('offline')"
 ```
 
+セキュアシェルは`--interactive`を使い、制御端末とジョブ制御を保持します。通常の単発実行では新しいセッションを作成して分離します。
+
 信頼される`secure-run`と`secure-shell`はイメージ生成時にroot所有で`/opt/secure-template`へ配置されます。VS CodeとCopilotはワークスペース内の同名ファイルを実行しません。コマンド名ブラックリストは利便性のための層であり、Docker socket非公開、capability除去、ファイル権限、ネットワーク分離が主たる防御です。
 
 ### 制限と正当性
@@ -165,8 +167,7 @@ npm run build
 3. 新しいGit履歴と `origin` を作成します。
 4. Dev Containerで`Initialize project`タスクを実行します。
 5. テスト後、初期状態をコミットします。
-6. 必要なら共有Agentサブモジュールを追加して別コミットします。
-7. 新リポジトリへpushします。
+6. 新リポジトリへpushします。
 
 利用時のcloneでは、サブモジュールも取得する必要があります。
 
@@ -194,16 +195,21 @@ git init -b main
 git remote add origin https://github.com/OWNER/my-project.git
 ```
 
-VS Codeの`Tasks: Run Task`から`Initialize project`を選び、プロジェクト名だけを
-入力します。`.git`がまだ存在しない場合でも初期化できます。`git init`直後の未追跡ファイルは
+VS Codeの`Tasks: Run Task`から`Initialize project`を選び、プロジェクト名とホスト側の
+公開ポートに加え、任意で共有AgentリポジトリURLを入力します。URLを空欄にすると共有Agentは
+導入しません。ポートの既定値は`3100`です。同時起動するプロジェクトには別のポートを
+指定してください。`.git`がまだ存在しない場合でも初期化できますが、共有Agentを導入する場合は
+事前に`git init`してください。`git init`直後の未追跡ファイルは
 許可し、初期コミットを持つリポジトリではworktreeがcleanであることを確認します。
 `origin`が設定済みなら、GitHubリポジトリURLを自動検出します。
 
 同じ処理を端末から実行する場合:
 
 ```sh
-npm run init-project -- --name my-project
+npm run init-project -- --name my-project --host-port 3100 --shared-agent-url https://github.com/OWNER/shared-agent.git
 ```
+
+`--host-port`は省略でき、省略時は`3100`を使用します。同じ環境で複数プロジェクトを同時に開く場合は、各プロジェクトに異なるホストポートを指定してください。利用可能な1024〜65535のポートを指定できます。生成されるCompose設定は指定したホストポートをloopbackに公開し、コンテナ内部の3000番へ転送します。`--shared-agent-url`は省略可能です。
 
 初期化後は検証して初回コミットを作成します。
 
@@ -222,8 +228,9 @@ git commit -m "Initialize project"
 
 ## 共有Agentサブモジュール
 
-共有Agentリポジトリの指定は、プロジェクト初期化ツールには含めていません。
-プロジェクト名だけで初期化を完了させ、Agentは次の別工程で追加します。
+共有AgentリポジトリURLは`Initialize project`へ任意で指定できます。指定した場合、
+初期化処理が`.github/shared`のサブモジュール登録、commitの固定、contract検証、
+instructionsの同期まで一度で完了します。
 
 共有Agentリポジトリは次の契約を持つ必要があります。
 
@@ -235,9 +242,8 @@ skills/
 bin/
 ```
 
-VS Codeの`Setup shared Agent`タスクへ共有リポジトリURLを入力するか、次を
-実行します。実行前にプロジェクト初期化の変更をコミットし、worktreeをcleanに
-してください。
+後から追加・修復する場合は、VS Codeの`Setup shared Agent`タスクへ共有リポジトリURLを
+入力するか、次を実行します。
 
 ```sh
 npm run setup-shared-agent -- --url https://github.com/OWNER/shared-agent.git
@@ -246,7 +252,8 @@ npm run setup-shared-agent -- --url https://github.com/OWNER/shared-agent.git
 ブランチを明示して最初の参照点を選ぶ場合は`--branch`を追加します。
 Gitサブモジュールは`.github/shared`へ追加され、Gitが参照commitを固定します。
 共有リポジトリの指示は`.github/copilot-instructions.local.md`と結合されて
-`.github/copilot-instructions.md`へ生成します。Agent定義とSkillは
+`.github/copilot-instructions.md`へ生成します。同期処理はAgent定義やSkillを複製せず、
+以前の`shared-*`生成物があれば削除します。Agent定義とSkillは
 `.vscode/settings.json`から`.github/agents`、`.github/shared/agents`、
 `.github/shared/skills`を直接検索対象にします。
 `.github/agents/game-conductor.agent.md`は、依頼分類、工程管理、hook実行、
@@ -348,7 +355,7 @@ bash scripts/verify-security.sh
 - `Operation not permitted`がBubblewrapで発生する: ホストで非特権user namespaceが有効か、Dockerのseccompプロファイルが読み込まれているか確認します。
 - npmでネットワークエラーになる: egress proxyが起動中か、対象ホストがallowlistに完全一致するか確認します。
 - 許可していないサイトに接続できてしまう: devコンテナが`sandbox`以外のDockerネットワークへ接続されていないか`docker inspect`で確認します。
-- ポート3000が利用できない: ホストで既に使用中でないか確認します。
+- 初期化後のフロントエンドポートが利用できない: `Initialize project`タスクで別のホストポートを指定して再初期化するか、Docker Composeのloopback bindポートを変更します。
 - VS Code拡張が未対応になる: 固定したVS Code本体と拡張版の組み合わせを更新します。未知の設定を黙って無視せず、出力ログを確認します。
 - GitHub Copilotで無料モデルだけが表示される: まずDev Container外の同じVS Code・同じGitHubアカウントでも表示状況を比較してください。外でも表示されず、Copilot Chatは動作するがエラーも出ない場合は、コンテナの通信遮断よりGitHub側の契約・利用可能モデル・premium requestの枠・アカウント切り替えを確認してください。外では表示されるがDev Container内だけ表示されない場合は、コンテナを再ビルドし、拡張機能ビューで`GitHub Copilot`と`GitHub Copilot Chat`が有効か確認します。モデル取得や送信時のブロック先はegress proxyのログで`403 denied CONNECT`として確認できます。不足ホストは通信内容と必要性を確認してからallowlistへ完全一致で追加してください。`502 upstream failure`はallowlistではなくDNS・経路・上流接続の問題です。
 

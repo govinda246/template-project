@@ -24,6 +24,13 @@
           "approvals": "manual"
         },
         "chat.permissions.default": "default",
+        "chat.agentFilesLocations": {
+          ".github/agents": true,
+          ".github/shared/agents": true
+        },
+        "chat.agentSkillsLocations": {
+          ".github/shared/skills": true
+        },
         "chat.tools.global.autoApprove": false,
         "chat.tools.edits.autoApprove": {
           "**/*": false

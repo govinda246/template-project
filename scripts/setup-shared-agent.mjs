@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { access } from 'node:fs/promises';
+import { access, readdir, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -23,10 +23,30 @@ function parseArgs(args) {
 }
 
 export function validateRepositoryUrl(value) {
-  return (
-    /^https:\/\/[A-Za-z0-9.-]+\/.+/.test(value) ||
-    /^git@[A-Za-z0-9.-]+:.+/.test(value)
-  );
+  if (typeof value !== 'string') {
+    return false;
+  }
+  if (/^git@[A-Za-z0-9.-]+:[^/].+/.test(value)) {
+    return true;
+  }
+  try {
+    const parsed = new URL(value);
+    return (
+      parsed.protocol === 'https:' &&
+      Boolean(parsed.hostname) &&
+      !parsed.username &&
+      !parsed.password &&
+      !parsed.search &&
+      !parsed.hash &&
+      parsed.pathname.length > 1
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function canonicalRepositoryUrl(value) {
+  return String(value ?? '').trim().replace(/\/$/, '').replace(/\.git$/, '');
 }
 
 async function pathExists(target) {
@@ -38,9 +58,9 @@ async function pathExists(target) {
   }
 }
 
-function git(root, args) {
+function git(root, args, cwd = root) {
   const result = spawnSync('git', args, {
-    cwd: root,
+    cwd,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -50,49 +70,206 @@ function git(root, args) {
   return result.stdout.trim();
 }
 
-function configuredSubmoduleUrl(root) {
-  const result = spawnSync('git', [
-    'config',
-    '--file',
-    '.gitmodules',
-    '--get-regexp',
-    '^submodule\\..*\\.path$',
-  ], {
-    cwd: root,
-    encoding: 'utf8',
-  });
+function configuredSubmodule(root) {
+  const result = spawnSync(
+    'git',
+    [
+      'config',
+      '--file',
+      '.gitmodules',
+      '--get-regexp',
+      '^submodule\\..*\\.path$',
+    ],
+    { cwd: root, encoding: 'utf8' },
+  );
   if (result.status === 1) {
-    return '';
+    return undefined;
   }
   if (result.status !== 0) {
     throw new Error(result.stderr.trim() || 'Unable to inspect .gitmodules.');
   }
-  const entries = result.stdout.trim().split(/\r?\n/);
-  const pathEntry = entries.find((entry) => entry.trim().endsWith(` ${SUBMODULE_PATH}`));
+  const pathEntry = result.stdout
+    .trim()
+    .split(/\r?\n/)
+    .find((entry) => entry.trim().endsWith(` ${SUBMODULE_PATH}`));
   if (!pathEntry) {
-    return '';
+    return undefined;
   }
   const pathKey = pathEntry.slice(0, pathEntry.indexOf(' '));
-  return git(root, [
-    'config',
-    '--file',
-    '.gitmodules',
-    '--get',
-    pathKey.replace(/\.path$/, '.url'),
-  ]);
+  const name = pathKey.slice('submodule.'.length, -'.path'.length);
+  return {
+    name,
+    url: git(root, [
+      'config',
+      '--file',
+      '.gitmodules',
+      '--get',
+      pathKey.replace(/\.path$/, '.url'),
+    ]),
+  };
 }
 
-function assertCleanWorktree(root) {
-  const status = git(root, [
-    'status',
-    '--porcelain',
-    '--untracked-files=all',
-  ]);
-  if (status) {
+function gitlinkExists(root) {
+  const result = spawnSync(
+    'git',
+    ['ls-files', '--stage', '--', SUBMODULE_PATH],
+    { cwd: root, encoding: 'utf8' },
+  );
+  if (result.status !== 0) {
+    throw new Error(result.stderr.trim() || 'Unable to inspect the shared Agent gitlink.');
+  }
+  return result.stdout.startsWith('160000 ');
+}
+
+async function directoryIsEmpty(target) {
+  return (await readdir(target)).length === 0;
+}
+
+export async function verifySharedAgentContract(root) {
+  for (const requiredPath of [
+    'copilot-instructions.md',
+    'hooks.yml',
+  ]) {
+    if (!(await pathExists(path.join(root, SUBMODULE_PATH, requiredPath)))) {
+      throw new Error(
+        `${SUBMODULE_PATH}/${requiredPath} is required by the shared Agent contract.`,
+      );
+    }
+  }
+  for (const requiredPath of ['agents', 'skills', 'bin']) {
+    const target = path.join(root, SUBMODULE_PATH, requiredPath);
+    if (!(await pathExists(target)) || !(await stat(target)).isDirectory()) {
+      throw new Error(
+        `${SUBMODULE_PATH}/${requiredPath} is required by the shared Agent contract.`,
+      );
+    }
+  }
+}
+
+async function removeSubmoduleRegistration(root, registration) {
+  const target = path.join(root, SUBMODULE_PATH);
+  if (gitlinkExists(root)) {
+    if (registration) {
+      git(root, ['submodule', 'deinit', '--force', '--', SUBMODULE_PATH]);
+    }
+    git(root, ['rm', '--force', '--', SUBMODULE_PATH]);
+  } else {
+    await rm(target, { recursive: true, force: true });
+  }
+
+  if (
+    registration &&
+    (await pathExists(path.join(root, '.gitmodules')))
+  ) {
+    const removeSection = spawnSync(
+      'git',
+      [
+        'config',
+        '--file',
+        '.gitmodules',
+        '--remove-section',
+        `submodule.${registration.name}`,
+      ],
+      { cwd: root, encoding: 'utf8' },
+    );
+    if (removeSection.status !== 0 && removeSection.status !== 5) {
+      throw new Error(
+        removeSection.stderr.trim() || 'Unable to remove the shared Agent registration.',
+      );
+    }
+  }
+
+  const gitmodulesPath = path.join(root, '.gitmodules');
+  if (await pathExists(gitmodulesPath)) {
+    const remaining = spawnSync(
+      'git',
+      ['config', '--file', '.gitmodules', '--get-regexp', '^submodule\\.'],
+      { cwd: root, encoding: 'utf8' },
+    );
+    if (remaining.status === 1) {
+      await rm(gitmodulesPath, { force: true });
+    } else if (remaining.status !== 0) {
+      throw new Error(remaining.stderr.trim() || 'Unable to inspect .gitmodules.');
+    }
+  }
+}
+
+export async function setupSharedAgent(root, options) {
+  const url = String(options.url ?? '').trim();
+  if (!validateRepositoryUrl(url)) {
+    throw new Error('A valid HTTPS or SSH shared Agent repository URL is required.');
+  }
+
+  const target = path.join(root, SUBMODULE_PATH);
+  const gitmodulesPath = path.join(root, '.gitmodules');
+  const registration = (await pathExists(gitmodulesPath))
+    ? configuredSubmodule(root)
+    : undefined;
+  const hasGitlink = gitlinkExists(root);
+  const sameUrl =
+    registration &&
+    canonicalRepositoryUrl(registration.url) === canonicalRepositoryUrl(url);
+  const targetExists = await pathExists(target);
+
+  if (registration && !sameUrl && !options.replaceExisting) {
     throw new Error(
-      'Commit or stash worktree changes before adding the shared Agent submodule.',
+      `${SUBMODULE_PATH} is already configured for ${registration.url}; no URL was changed.`,
     );
   }
+  if (!registration && hasGitlink && !options.replaceExisting) {
+    throw new Error(
+      `${SUBMODULE_PATH} has a gitlink but is not registered in .gitmodules.`,
+    );
+  }
+  if ((registration && (!sameUrl || !hasGitlink)) ||
+      (!registration && hasGitlink)) {
+    await removeSubmoduleRegistration(root, registration);
+  } else if (!registration && targetExists) {
+    if (!(await directoryIsEmpty(target)) && !options.replaceExisting) {
+      throw new Error(
+        `${SUBMODULE_PATH} is non-empty but is not registered in .gitmodules.`,
+      );
+    }
+    await rm(target, { recursive: true, force: true });
+  }
+
+  if (!sameUrl || !hasGitlink || !registration) {
+    const argumentsList = ['submodule', 'add'];
+    if (options.branch) {
+      argumentsList.push('--branch', options.branch);
+    }
+    argumentsList.push(url, SUBMODULE_PATH);
+    git(root, argumentsList);
+  } else {
+    git(root, ['submodule', 'update', '--init', '--recursive', SUBMODULE_PATH]);
+  }
+
+  await verifySharedAgentContract(root);
+  const synced = await syncSharedAgent(root);
+  return {
+    path: SUBMODULE_PATH,
+    instructions: synced.instructions,
+    commit: git(root, ['rev-parse', 'HEAD'], target),
+  };
+}
+
+export async function removeSharedAgent(root, options = {}) {
+  const gitmodulesPath = path.join(root, '.gitmodules');
+  const registration = (await pathExists(gitmodulesPath))
+    ? configuredSubmodule(root)
+    : undefined;
+  const target = path.join(root, SUBMODULE_PATH);
+  if (registration || gitlinkExists(root)) {
+    await removeSubmoduleRegistration(root, registration);
+  } else if (await pathExists(target)) {
+    if (!(await directoryIsEmpty(target)) && !options.force) {
+      throw new Error(
+        `${SUBMODULE_PATH} is non-empty but is not registered in .gitmodules.`,
+      );
+    }
+    await rm(target, { recursive: true, force: true });
+  }
+  await syncSharedAgent(root);
 }
 
 async function main() {
@@ -104,34 +281,7 @@ async function main() {
   }
 
   const root = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
-  assertCleanWorktree(root);
-  const target = path.join(root, SUBMODULE_PATH);
-  const gitmodulesPath = path.join(root, '.gitmodules');
-  const configuredUrl = (await pathExists(gitmodulesPath))
-    ? configuredSubmoduleUrl(root)
-    : '';
-  if (configuredUrl) {
-    if (configuredUrl !== options.url) {
-      throw new Error(
-        `${SUBMODULE_PATH} is already configured for ${configuredUrl}; no URL was changed.`,
-      );
-    }
-    git(root, ['submodule', 'update', '--init', '--recursive', SUBMODULE_PATH]);
-  } else {
-    if (await pathExists(target)) {
-      throw new Error(
-        `${SUBMODULE_PATH} already exists but is not registered in .gitmodules.`,
-      );
-    }
-    const argumentsList = ['submodule', 'add'];
-    if (options.branch) {
-      argumentsList.push('--branch', options.branch);
-    }
-    argumentsList.push(options.url, SUBMODULE_PATH);
-    git(root, argumentsList);
-  }
-
-  const synced = await syncSharedAgent(root);
+  const synced = await setupSharedAgent(root, options);
   console.log(`Shared Agent ready at ${SUBMODULE_PATH}.`);
   console.log(`Synchronized ${synced.instructions}.`);
   console.log('Review the .gitmodules and submodule commit before committing.');

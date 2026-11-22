@@ -2,19 +2,31 @@
 set -euo pipefail
 
 if [[ $# -eq 0 ]]; then
-  echo "usage: secure-run [--offline] COMMAND [ARG...]" >&2
+  echo "usage: secure-run [--offline] [--interactive] COMMAND [ARG...]" >&2
   exit 64
 fi
 
 network_args=()
-if [[ ${1:-} == "--offline" ]]; then
-  # 外部通信が不要なコマンドでは、proxyを使わずnetwork namespaceごと切り離す。
-  network_args=(--unshare-net)
-  shift
-fi
+interactive=false
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --offline)
+      # 外部通信が不要なコマンドでは、proxyを使わずnetwork namespaceごと切り離す。
+      network_args=(--unshare-net)
+      shift
+      ;;
+    --interactive)
+      interactive=true
+      shift
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 if [[ $# -eq 0 ]]; then
-  echo "secure-run: command is required after --offline" >&2
+  echo "secure-run: command is required after options" >&2
   exit 64
 fi
 
@@ -39,6 +51,9 @@ if [[ -z "$project_root" ]]; then
 fi
 project_root="$(cd -- "$project_root" && pwd)"
 path_prefix=/usr/local/share/npm-global/bin
+if [[ -d /usr/local/share/nvm/current/bin ]]; then
+  path_prefix="/usr/local/share/nvm/current/bin:$path_prefix"
+fi
 if [[ -d "$project_root/.github/shared/bin" ]]; then
   path_prefix="$project_root/.github/shared/bin:$path_prefix"
 fi
@@ -58,9 +73,8 @@ readonly_dirs=(
 )
 
 args=(
-  # 親と同一セッションのままにせず、プロセス・IPC・hostnameを分離する。
+  # PID・IPC・hostnameを分離し、親終了時に子も停止する。
   --die-with-parent
-  --new-session
   --unshare-user
   --unshare-pid
   --unshare-ipc
@@ -71,6 +85,10 @@ args=(
   --tmpfs /tmp
   --tmpfs /run
 )
+
+if [[ "$interactive" == false ]]; then
+  args+=(--new-session)
+fi
 
 for path in "${readonly_dirs[@]}"; do
   if [[ -e "$path" ]]; then

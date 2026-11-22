@@ -1,6 +1,8 @@
 import {
   access,
+  readdir,
   readFile,
+  rm,
   writeFile,
 } from 'node:fs/promises';
 import path from 'node:path';
@@ -20,27 +22,34 @@ async function pathExists(target) {
   }
 }
 
+async function removeLegacyGeneratedFiles(root) {
+  const removed = [];
+  for (const relativeRoot of ['.github/agents', '.github/skills']) {
+    const directory = path.join(root, relativeRoot);
+    if (!(await pathExists(directory))) {
+      continue;
+    }
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      if (!entry.name.startsWith('shared-')) {
+        continue;
+      }
+      const target = path.join(directory, entry.name);
+      await rm(target, { recursive: true, force: true });
+      removed.push(path.relative(root, target));
+    }
+  }
+  return removed;
+}
+
 export async function syncSharedAgent(root) {
   const localInstructionsPath = path.join(root, LOCAL_INSTRUCTIONS);
   const localInstructions = await readFile(localInstructionsPath, 'utf8');
   const sharedRoot = path.join(root, SHARED_ROOT);
 
   let sharedInstructions = '';
-  if (await pathExists(sharedRoot)) {
-    for (const requiredPath of [
-      'copilot-instructions.md',
-      'hooks.yml',
-      'agents',
-      'skills',
-      'bin',
-    ]) {
-      if (!(await pathExists(path.join(sharedRoot, requiredPath)))) {
-        throw new Error(
-          `${SHARED_ROOT}/${requiredPath} is required by the shared Agent contract.`,
-        );
-      }
-    }
-    const expectedInstructions = path.join(sharedRoot, 'copilot-instructions.md');
+  const expectedInstructions = path.join(sharedRoot, 'copilot-instructions.md');
+  const sharedInstructionsPresent = await pathExists(expectedInstructions);
+  if (sharedInstructionsPresent) {
     sharedInstructions = await readFile(expectedInstructions, 'utf8');
   }
 
@@ -48,11 +57,12 @@ export async function syncSharedAgent(root) {
     ? `${localInstructions.trimEnd()}\n\n## Shared Agent instructions\n\n${sharedInstructions.trim()}\n`
     : `${localInstructions.trimEnd()}\n`;
   await writeFile(path.join(root, GENERATED_INSTRUCTIONS), combined);
+  const removed = await removeLegacyGeneratedFiles(root);
 
   return {
     instructions: GENERATED_INSTRUCTIONS,
-    files: [],
-    sharedPresent: await pathExists(sharedRoot),
+    files: removed,
+    sharedPresent: sharedInstructionsPresent,
   };
 }
 
