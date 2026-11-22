@@ -44,10 +44,10 @@
         "chat.tools.urls.autoApprove": {},
         "chat.agent.sandbox.enabled": "on",
         // Agent自身には外部・LAN・資格情報・ホスト開発ツールを公開しない。
-        "chat.agent.sandbox.network.allowNetwork": false,
+        //"chat.agent.sandbox.network.allowNetwork": false,
         // Agent自身にはGitHub以外の外部・LAN・資格情報・ホスト開発ツールを公開しない。
-        //"chat.agent.sandbox.network.allowNetwork": true,
-        //"chat.agent.sandbox.network.allowedDomains": ["github.com"],
+        "chat.agent.sandbox.network.allowNetwork": true,
+        "chat.agent.sandbox.network.allowedDomains": ["github.com"],
         "chat.agent.sandbox.network.allowLocalNetwork": false,
         "chat.agent.sandbox.fileSystem.allowDevToolAccess": false,
         "chat.agent.sandbox.credentials.authenticategit": false,

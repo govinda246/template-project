@@ -49,6 +49,8 @@ jobs:
           skip-dirs: .git,node_modules
           severity: HIGH,CRITICAL
           exit-code: "1"
+          format: sarif
+          output: trivy-repository-security.sarif
       - name: Generate dependency vulnerability report
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -59,6 +61,7 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: "0"
           format: table
+          output: trivy-dependencies.txt
       - name: Build Dev Container image for scanning
         run: docker build -f .devcontainer/Dockerfile -t secure-template-devcontainer:ci .
       - name: Scan Dev Container image
@@ -70,6 +73,7 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: "0"
           format: table
+          output: trivy-devcontainer.txt
       - name: Generate CycloneDX SBOM
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -78,6 +82,18 @@ jobs:
           skip-dirs: .git,node_modules
           format: cyclonedx
           output: trivy-sbom.cdx.json
+      - name: Upload Trivy reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: trivy-reports
+          path: |
+            trivy-repository-security.sarif
+            trivy-dependencies.txt
+            trivy-devcontainer.txt
+            trivy-sbom.cdx.json
+          if-no-files-found: warn
+          retention-days: 30
       - name: Run tests
         run: npm test
       - name: Run bootstrap tests
