@@ -158,7 +158,7 @@ Composeでdevcontainerは2 CPU・4 GBメモリ・512 PID、egress proxyは0.5 CP
 
 資源上限、ログローテーション、GitHub ActionsのコミットSHA固定、Dependabot、npm auditを実装済みです。GitHub側ではSecret scanning、Push protection、Private vulnerability reporting、Dependabot alerts、Dependabot security updatesも有効化済みです。SBOM、バックアップ、専用VMは運用側の追加対策として残ります。
 
-公開ガイドには、追加対策なしを0点、現在の実装を71点、使い捨てVM・完全オフライン・資格情報なし・署名検証・外部監視・復旧を備えた比較用構成を100点とする相対スコアを掲載しています。これは独自の設計比較値であり、絶対的な安全度や脆弱性診断ではありません。
+公開ガイドには、追加対策なしを0点、現在の実装を71点、使い捨てVM・完全オフライン・資格情報なし・署名検証・外部監視・復旧を備えた比較用構成を100点とする相対スコアを掲載しています。通信・権限制御、資源上限、回帰テスト、依存関係監査などの実装済み対策は既に現在の配点へ反映しています。これは対策追加ごとに自動加点する指標ではなく、絶対的な安全度や脆弱性診断でもない独自の設計比較値です。
 
 ## 開始
 
