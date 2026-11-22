@@ -20,10 +20,10 @@ import {
 
 const TEMPLATE_NAME = 'secure-phaser-template';
 const TEMPLATE_TITLE = 'Secure Phaser Template';
-const TEMPLATE_WORKSPACE = '/workspaces/github_agent_test';
+const TEMPLATE_WORKSPACE = '/workspaces/template-project';
 const TEMPLATE_REPOSITORY = 'https://github.com/govinda246/template-project';
 const TEMPLATE_PAGES = 'https://govinda246.github.io/template-project';
-const TEMPLATE_ROOT_NAME = 'github_agent_test';
+const TEMPLATE_ROOT_NAME = 'template-project';
 
 const replacedFiles = [
   'package.json',

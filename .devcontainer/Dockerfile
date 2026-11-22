@@ -36,6 +36,6 @@ ENV HTTP_PROXY=http://egress-proxy:3128
 ENV HTTPS_PROXY=http://egress-proxy:3128
 ENV ALL_PROXY=http://egress-proxy:3128
 ENV NO_PROXY=localhost,127.0.0.1
-ENV SECURE_PROJECT_ROOT=/workspaces/github_agent_test
+ENV SECURE_PROJECT_ROOT=/workspaces/template-project
 
 USER node

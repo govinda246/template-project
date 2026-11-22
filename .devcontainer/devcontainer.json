@@ -4,10 +4,10 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "devcontainer",
   "runServices": ["egress-proxy"],
-  "workspaceFolder": "/workspaces/github_agent_test",
+  "workspaceFolder": "/workspaces/template-project",
   "remoteUser": "node",
   "shutdownAction": "stopCompose",
-  "postCreateCommand": "git config --global --replace-all safe.directory /workspaces/github_agent_test && git submodule update --init --recursive && node scripts/sync-shared-agent.mjs",
+  "postCreateCommand": "git config --global --replace-all safe.directory /workspaces/template-project && git submodule update --init --recursive && node scripts/sync-shared-agent.mjs",
   "forwardPorts": ["egress-proxy:3000"],
   "customizations": {
     "vscode": {

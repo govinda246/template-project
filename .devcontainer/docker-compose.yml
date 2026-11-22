@@ -11,7 +11,7 @@ services:
     user: node
     volumes:
       # workspaceは開発に必要なためbindする。秘密情報はこのフォルダーへ置かない。
-      - ..:/workspaces/github_agent_test:cached
+      - ..:/workspaces/template-project:cached
       - agent-session-history:/home/node/.vscode-server/data/User/workspaceStorage
       - copilot-session-history:/home/node/.copilot/session-state
     networks:

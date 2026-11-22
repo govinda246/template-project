@@ -15,7 +15,7 @@ async function createProjectFixture() {
   const root = await mkdtemp(path.join(tmpdir(), 'project-init-test-'));
   const packageName = ['secure', 'phaser', 'template'].join('-');
   const templateTitle = ['Secure', 'Phaser', 'Template'].join(' ');
-  const templateRoot = ['github', 'agent', 'test'].join('_');
+  const templateRoot = 'template-project';
   const templateRepository = [
     'https://github.com',
     ['govinda246', 'template-project'].join('/'),
