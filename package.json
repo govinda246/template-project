@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": "22.16.0",
-    "npm": "10.9.2"
+    "node": ">=26 <27",
+    "npm": ">=11 <12"
   },
   "scripts": {
     "init-project": "node scripts/init-project.mjs",

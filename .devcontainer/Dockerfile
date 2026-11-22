@@ -1,8 +1,8 @@
 # digest固定により同じイメージ参照が後から別内容へ差し替わることを防ぐ。
-FROM mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm@sha256:0d29e5fdc64f8397cd502223e0c4679f1e60877ca0fd2db4f2e2e0028e4271af
+FROM mcr.microsoft.com/devcontainers/javascript-node:5-26-bookworm@sha256:001e44cb39fceaafcd8ee3cca2e0005399a78694b26e7682acf9dece827ea7e6
 
-ARG EXPECTED_NODE_VERSION=22.16.0
-ARG EXPECTED_NPM_VERSION=10.9.2
+ARG EXPECTED_NODE_MAJOR=26
+ARG EXPECTED_NPM_MAJOR=11
 
 USER root
 
@@ -16,8 +16,8 @@ RUN apt-get update \
         slirp4netns \
         util-linux \
     && rm -rf /var/lib/apt/lists/* \
-    && test "$(node --version)" = "v${EXPECTED_NODE_VERSION}" \
-    && test "$(npm --version)" = "${EXPECTED_NPM_VERSION}" \
+    && case "$(node --version)" in "v${EXPECTED_NODE_MAJOR}."*) ;; *) exit 1 ;; esac \
+    && case "$(npm --version)" in "${EXPECTED_NPM_MAJOR}."*) ;; *) exit 1 ;; esac \
     && mkdir -p \
         /home/node/.copilot/session-state \
         /home/node/.vscode-server/data/agentSessionData \

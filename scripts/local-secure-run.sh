@@ -42,15 +42,15 @@ case "$command_name" in
 esac
 
 if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
-  echo "local-secure-run: Node.js 22.16.0 and npm 10.9.2 must be installed in WSL." >&2
+  echo "local-secure-run: Node.js 26.x and npm 11.x must be installed in WSL." >&2
   echo "local-secure-run: Use the Dev Container when an isolated package runtime is required." >&2
   exit 69
 fi
 
-expected_node="v22.16.0"
-expected_npm="10.9.2"
-if [[ "$(node --version)" != "$expected_node" || "$(npm --version)" != "$expected_npm" ]]; then
-  echo "local-secure-run: expected Node.js $expected_node and npm $expected_npm in WSL." >&2
+actual_node="$(node --version)"
+actual_npm="$(npm --version)"
+if [[ "$actual_node" != v26.* || "$actual_npm" != 11.* ]]; then
+  echo "local-secure-run: expected Node.js 26.x and npm 11.x in WSL." >&2
   exit 65
 fi
 

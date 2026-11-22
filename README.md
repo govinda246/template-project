@@ -320,8 +320,8 @@ VS Codeをコンテナから開いていないWindowsでも、最低限のロー
 
 - WSL 2
 - WSL内のBubblewrap
-- WSL内のNode.js `22.16.0`
-- WSL内のnpm `10.9.2`
+- WSL内のNode.js `26.x`
+- WSL内のnpm `11.x`
 
 `node`や`npm`がWSL内にない場合、タスクは通常のPowerShellへフォールバックせず停止します。初回に、レビュー済みのランナーをワークスペース外のユーザー領域へ固定します。VS Codeはワークスペース内で変更可能なランナーを直接実行しません。次のコピー後に`$env:LOCALAPPDATA\SecureTemplate`内の3ファイルを確認してください。Git更新後は差分をレビューして、このコピーを手動で更新します。
 
@@ -381,9 +381,9 @@ node scripts/verify-dns-security.mjs
 
 ## バージョン固定
 
-- Node.js: `22.16.0`
-- npm: `10.9.2`
-- ベースイメージ: `mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm` の multi-arch digest
+- Node.js: `26.x`
+- npm: `11.x`
+- ベースイメージ: `mcr.microsoft.com/devcontainers/javascript-node:5-26-bookworm` の multi-arch digest
 - Phaser: `4.2.1`
 - Vite: `8.3.8`
 - TypeScript: `7.0.2`
