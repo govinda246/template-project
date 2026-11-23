@@ -43,6 +43,7 @@ jobs:
       - name: Scan repository for misconfiguration and secrets
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
+          version: latest
           scan-type: fs
           scan-ref: .
           scanners: misconfig,secret
@@ -55,6 +56,7 @@ jobs:
       - name: Generate dependency vulnerability report
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
+          version: latest
           scan-type: fs
           scan-ref: .
           scanners: vuln
@@ -68,6 +70,7 @@ jobs:
       - name: Scan Dev Container image
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
+          version: latest
           scan-type: image
           image-ref: secure-template-devcontainer:ci
           scanners: vuln
@@ -78,6 +81,7 @@ jobs:
       - name: Generate CycloneDX SBOM
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
+          version: latest
           scan-type: fs
           scan-ref: .
           skip-dirs: .git,node_modules
@@ -86,6 +90,7 @@ jobs:
       - name: Block fixable dependency vulnerabilities
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
+          version: latest
           scan-type: fs
           scan-ref: .
           scanners: vuln
@@ -98,6 +103,7 @@ jobs:
       - name: Block fixable Dev Container vulnerabilities
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
+          version: latest
           scan-type: image
           image-ref: secure-template-devcontainer:ci
           scanners: vuln

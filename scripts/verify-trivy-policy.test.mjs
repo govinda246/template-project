@@ -14,6 +14,27 @@ function step(name) {
   return workflow.slice(start, end === -1 ? workflow.length : end);
 }
 
+test('all Trivy action calls use the latest CLI release', () => {
+  const actionCalls = workflow.match(
+    /uses: aquasecurity\/trivy-action@[^\n]+\n/g,
+  ) ?? [];
+  assert.ok(actionCalls.length > 0, 'missing Trivy action calls');
+
+  const blocks = workflow.split(/(?=      - name:)/);
+  const trivyBlocks = blocks.filter((block) =>
+    block.includes('uses: aquasecurity/trivy-action@'),
+  );
+  assert.equal(trivyBlocks.length, actionCalls.length);
+
+  for (const block of trivyBlocks) {
+    assert.match(
+      block,
+      /\n          version: latest(?:\n|$)/,
+      'Trivy action call must explicitly use latest',
+    );
+  }
+});
+
 for (const [gateName, inventoryName, output] of [
   [
     'Block fixable dependency vulnerabilities',
