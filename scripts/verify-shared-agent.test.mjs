@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
+import { chmod, mkdtemp, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -111,4 +111,33 @@ test('rejects forbidden instructions in checked-out shared Agent content', async
       process.env.APPROVED_SHARED_AGENT_COMMIT = original;
     }
   }
+});
+
+test('uses indexed modes when a bind mount makes regular files executable', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'shared-agent-filemode-'));
+  const shared = path.join(root, '.github/shared');
+  await mkdir(path.join(shared, 'agents'), { recursive: true });
+  await mkdir(path.join(shared, 'skills'), { recursive: true });
+  await mkdir(path.join(shared, 'bin'), { recursive: true });
+  await writeFile(path.join(shared, 'copilot-instructions.md'), 'Shared\n');
+  await writeFile(path.join(shared, 'hooks.yml'), 'hooks: {}\n');
+
+  git(shared, ['init', '-b', 'main']);
+  git(shared, ['config', 'user.email', 'test@example.com']);
+  git(shared, ['config', 'user.name', 'Test']);
+  git(shared, ['add', '.']);
+  git(shared, ['commit', '-m', 'Shared content']);
+  const approvedCommit = git(shared, ['rev-parse', 'HEAD']);
+  await chmod(path.join(shared, 'copilot-instructions.md'), 0o755);
+
+  git(shared, ['config', 'core.filemode', 'false']);
+  await assert.doesNotReject(
+    verifyCheckedOutContract(root, { commit: approvedCommit }),
+  );
+
+  git(shared, ['config', 'core.filemode', 'true']);
+  await assert.rejects(
+    verifyCheckedOutContract(root, { commit: approvedCommit }),
+    /Executable files are not allowed/,
+  );
 });

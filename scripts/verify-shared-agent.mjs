@@ -57,6 +57,35 @@ function canonicalUrl(value) {
   return String(value).trim().replace(/\/$/, '').replace(/\.git$/, '');
 }
 
+function fileModeIsTrusted(sharedRoot) {
+  const result = spawnSync(
+    'git',
+    ['config', '--bool', 'core.filemode'],
+    { cwd: sharedRoot, encoding: 'utf8' },
+  );
+  if (result.status === 1) {
+    return true;
+  }
+  if (result.status !== 0) {
+    throw new Error(
+      result.stderr.trim() || 'Unable to inspect shared Agent filemode handling.',
+    );
+  }
+  return result.stdout.trim() === 'true';
+}
+
+function indexedFileModes(sharedRoot) {
+  const output = git(sharedRoot, ['ls-files', '--stage', '-z']);
+  const modes = new Map();
+  for (const entry of output.split('\0')) {
+    const match = /^(\d+)\s+[0-9a-f]+\s+0\t(.+)$/u.exec(entry);
+    if (match) {
+      modes.set(match[2], match[1]);
+    }
+  }
+  return modes;
+}
+
 export function verifyPreCheckout(root, policy = {}) {
   const approvedUrl = policy.url ?? APPROVED_URL;
   const approvedCommit = policy.commit ?? APPROVED_COMMIT;
@@ -155,10 +184,21 @@ export async function verifyCheckedOutContract(root, policy = {}) {
     }
   }
 
+  const trustFileMode = fileModeIsTrusted(sharedRoot);
+  const indexedModes = indexedFileModes(sharedRoot);
   for (const file of await walkFiles(sharedRoot)) {
     const relativePath = path.relative(sharedRoot, file);
     const stats = await lstat(file);
-    if ((stats.mode & 0o111) !== 0) {
+    const indexedMode = indexedModes.get(relativePath.split(path.sep).join('/'));
+    if (!indexedMode) {
+      throw new Error(
+        `Untracked files are not allowed in the shared Agent contract: ${relativePath}.`,
+      );
+    }
+    if (
+      indexedMode === '100755' ||
+      (trustFileMode && (stats.mode & 0o111) !== 0)
+    ) {
       throw new Error(
         `Executable files are not allowed in the shared Agent contract: ${relativePath}.`,
       );

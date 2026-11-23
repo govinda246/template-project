@@ -131,11 +131,19 @@ export function verifyEffectiveSettings(devcontainer, workspace) {
     );
   }
 
-  assert.deepEqual(effective['chat.tools.edits.autoApprove'], EDITS_ALLOWLIST);
-  assert.deepEqual(effective['chat.tools.terminal.autoApprove'], {
-    'git --no-pager status --short': true,
-    'git --no-pager diff --no-ext-diff --no-textconv --check': true,
-  });
+  assert.deepEqual(
+    effective['chat.tools.edits.autoApprove'],
+    EDITS_ALLOWLIST,
+    'Effective VS Code setting chat.tools.edits.autoApprove must match the allowlist.',
+  );
+  assert.deepEqual(
+    effective['chat.tools.terminal.autoApprove'],
+    {
+      'git --no-pager status --short': true,
+      'git --no-pager diff --no-ext-diff --no-textconv --check': true,
+    },
+    'Effective VS Code setting chat.tools.terminal.autoApprove must match the allowlist.',
+  );
   assert.deepEqual(effective['chat.tools.urls.autoApprove'], {});
   assert.deepEqual(
     effective['terminal.integrated.profiles.linux']['Secure shell'],
@@ -151,6 +159,7 @@ export function verifyEffectiveSettings(devcontainer, workspace) {
   assert.deepEqual(
     effective['chat.agent.sandbox.network.allowedDomains'],
     NETWORK_ALLOWLIST,
+    'Effective VS Code setting chat.agent.sandbox.network.allowedDomains must match the allowlist.',
   );
   return effective;
 }
