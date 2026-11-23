@@ -12,15 +12,41 @@ function remoteSettings() {
             approvals: 'manual',
           },
           'chat.tools.global.autoApprove': false,
+          'chat.tools.edits.autoApprove': {
+            'src/**': true,
+            'test/**': true,
+            'tests/**': true,
+            'public/**': true,
+            'docs/**': true,
+          },
           'chat.tools.eligibleForAutoApproval': {
-            runInTerminal: false,
+            runInTerminal: true,
             sendToTerminal: false,
           },
-          'chat.tools.terminal.enableAutoApprove': false,
-          'chat.tools.terminal.autoApprove': {},
+          'chat.tools.terminal.enableAutoApprove': true,
+          'chat.tools.terminal.autoApprove': {
+            'git --no-pager status --short': true,
+            'git --no-pager diff --no-ext-diff --no-textconv --check': true,
+          },
           'chat.tools.urls.autoApprove': {},
           'chat.agent.sandbox.enabled': 'on',
-          'chat.agent.sandbox.network.allowNetwork': false,
+          'chat.agent.sandbox.network.allowNetwork': true,
+          'chat.agent.sandbox.network.allowedDomains': [
+            'registry.npmjs.org',
+            'github.com',
+            'api.github.com',
+            'objects.githubusercontent.com',
+            'codeload.github.com',
+            'raw.githubusercontent.com',
+            'marketplace.visualstudio.com',
+            'main.vscode-cdn.net',
+            'github.gallerycdn.vsassets.io',
+            'dbaeumer.gallerycdn.vsassets.io',
+            'esbenp.gallerycdn.vsassets.io',
+            'api.individual.githubcopilot.com',
+            'api.githubcopilot.com',
+            'copilot-proxy.githubusercontent.com',
+          ],
           'chat.agent.sandbox.network.allowLocalNetwork': false,
           'chat.agent.sandbox.fileSystem.allowDevToolAccess': false,
           'chat.agent.sandbox.credentials.authenticategit': false,
@@ -48,7 +74,7 @@ test('accepts secure effective Dev Container settings', () => {
   assert.doesNotThrow(() => verifyEffectiveSettings(remoteSettings(), {}));
 });
 
-test('rejects workspace overrides that enable auto approval or networking', () => {
+test('rejects workspace overrides that weaken approval, network, or edit boundaries', () => {
   assert.throws(
     () =>
       verifyEffectiveSettings(remoteSettings(), {
@@ -59,8 +85,38 @@ test('rejects workspace overrides that enable auto approval or networking', () =
   assert.throws(
     () =>
       verifyEffectiveSettings(remoteSettings(), {
-        'chat.agent.sandbox.network.allowNetwork': true,
+        'chat.agent.sandbox.network.allowNetwork': false,
       }),
     /allowNetwork/,
+  );
+  assert.throws(
+    () =>
+      verifyEffectiveSettings(remoteSettings(), {
+        'chat.tools.terminal.autoApprove': {
+          'git --no-pager status --short': true,
+          npm: true,
+        },
+      }),
+    /terminal\.autoApprove/,
+  );
+  assert.throws(
+    () =>
+      verifyEffectiveSettings(remoteSettings(), {
+        'chat.tools.edits.autoApprove': {
+          'src/**': true,
+          '.github/**': true,
+        },
+      }),
+    /edits\.autoApprove/,
+  );
+  assert.throws(
+    () =>
+      verifyEffectiveSettings(remoteSettings(), {
+        'chat.agent.sandbox.network.allowedDomains': [
+          'registry.npmjs.org',
+          'unreviewed.example.com',
+        ],
+      }),
+    /allowedDomains/,
   );
 });

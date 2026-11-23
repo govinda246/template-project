@@ -386,11 +386,17 @@
           <article class="card">
             <span class="tag">初回・普段のゲーム起動</span>
             <ol>
-              <li>Docker Desktopを起動</li>
+              <li>Docker Desktopが起動し、Linux Engineへ接続できることを確認</li>
               <li>VS Codeでリポジトリを開く</li>
               <li>「Reopen in Container」を選ぶ</li>
               <li>コンテナ内ターミナルで下記を実行</li>
             </ol>
+            <p>
+              WindowsではDocker Desktopの自動起動を有効にするか、再起動後に
+              <code>docker desktop start</code>を実行し、<code>docker info</code>が成功してから
+              コンテナーを開くと安定します。ホストにはWSL 2、十分なメモリ・ディスク、
+              <code>/dev/net/tun</code>、Compose v2が必要です。
+            </p>
             <div class="commands">
               <pre>npm ci
 npm run dev</pre>

@@ -6,10 +6,13 @@ TypeScript、Vite、Phaser 4 を使う最小2Dブラウザーゲーム基盤で�
 
 ## 前提
 
-- Docker Desktop または Docker Engine + Compose v2
-- VS Code
-- Dev Containers拡張
+- Docker Desktop 29.9.3相当またはDocker Engine + Compose v2
+- VS Code 1.147相当とDev Containers拡張
+- WindowsではWSL 2とDocker DesktopのLinuxコンテナバックエンド
+- Windowsではホストに実行可能なDocker Desktop CLIプラグイン
 - WSL 2/Linuxコンテナ環境で有効な非特権user namespace
+- 十分なCPU、メモリ、ディスク容量
+- ホストの`/dev/net/tun`相当のデバイスをDockerが利用可能
 
 このテンプレートはDocker CLI 29.9.3 / Compose v2で構成を検証しています。利用開始前にホストで次を確認してください。
 
@@ -22,6 +25,20 @@ Dockerデーモンが稼働していない場合はDev Containerを再ビルド�
 
 Windowsでは、コンテナー作成直前に[initialize-docker.ps1](.devcontainer/initialize-docker.ps1)が
 実行されます。Docker Desktopが停止している場合は起動し、Engineが応答するまで最大90秒待機します。
+再起動直後にコンテナーを開く場合は、Docker Desktopの設定で`Start Docker Desktop when you sign in`
+を有効にすることを推奨します。Docker Desktopの設定ファイルでは`AutoStart: true`です。
+
+次の場合はコンテナーが起動できないか、起動後にツールが利用できなくなります。
+
+- Docker DesktopまたはLinux Engineが停止している。PC再起動直後は`docker info`で接続状態を確認します。
+- Docker DesktopがWSL 2ではなく別のバックエンドを使っている。Linuxコンテナの利用中は`desktop-linux`コンテキストを選びます。
+- WSL 2、仮想化、または非特権user namespaceが無効になっている。
+- ホストの空きメモリが不足している。Composeはdevcontainerに4 GB、egress proxyに256 MBの上限を設定し、DNS filterにもコンテナリソースを必要とします。
+- ホストのディスク、Dockerイメージ領域、またはnamed volume領域が不足している。
+- Dockerに`/dev/net/tun`のデバイスマッピングを許可できない。セキュリティ設定を変更する場合はDev Containerを再ビルドし、Compose設定とテストを再確認します。
+- Docker Desktopのファイアウォール、Endpoint、アンチウイルス、VPN、プロキシがEngineのNamed Pipe、WSL、イメージレジストリへの接続を妨げる。
+- ホストに古いDocker CLIや別のCompose実装があり、検証済みのCLIとは異なる動作になる。
+- 前回起動のコンテナーやネットワークが不整合になっている。`docker compose -f .devcontainer/docker-compose.yml down --remove-orphans`の後に`Rebuild Container`を試します。
 
 Copilot SDKのイベントログ、Agent Hostの会話DB、VS Codeのworkspace state、
 Copilot Chat / Agent Hostの一覧metadataは、それぞれ別のnamed volumeへ保存します。
@@ -106,7 +123,25 @@ Composeの`json-file`ログはコンテナごとに10 MBではなく、egress pr
 | 共有Agentサブモジュール | `.github/shared`、`.github/shared/bin` | 指示・定義・Skillとして読み込む。PATHには追加しない |
 | 対象外 | ホストFS、Docker socket、host network、資格情報 | Agentへ公開しない |
 
-Agentによるテスト実行は、VS Codeの`secure: test`タスクを毎回手動承認して委任できます。固定タスク以外の任意シェル、引数付き`npm exec`、`npx`、依存関係導入、Git操作、オンライン実行は自動承認しません。現状でもworkspaceのテスト・設定・ソースは書き込み可能であり、Agentが変更した内容がテストへ渡されるため、`npm test`の無条件な自動承認は信頼境界として扱いません。
+Agentによるテスト実行は、VS Codeの`secure: test`タスクを毎回手動承認して委任できます。固定タスク以外の任意シェル、引数付き`npm exec`、`npx`、依存関係導入、Git操作、オンライン実行は自動承認しません。現状でもworkspaceのテスト・設定・ソースは書き込み可能であり、Agentが変更した内容がテストへ渡されるため、`npm test`を含むworkspace由来コードを実行するコマンドは固定形式でも手動承認を維持します。
+
+通常の`src/`、`test/`、`tests/`、`public/`、`docs/`の編集は承認を挟まず、自動で差分確認できるようにします。これらはGitまたは開発履歴から比較・差し戻せることを前提とし、`.git/`、`.devcontainer/`、`.github/`、`.vscode/`、`scripts/`、トップレベル設定、lockfile、秘密候補は手動承認を維持します。
+
+自動承認できるのは、本当に副作用を持たない読み取り・状態確認に限ります。現在のDev ContainerとWindowsローカルworkspaceでは、`git --no-pager status --short`と、`--no-ext-diff --no-textconv`を付けた`git --no-pager diff ... --check`だけを完全一致で自動許可します。その他の`ls`、`cat`、ハッシュ確認もコマンド名だけでは許可せず、内蔵の読み取りツールまたは手動承認を使います。
+
+Gitの自動許可対象外では、信頼済みの絶対実行パス、完全一致の引数、同じsandbox境界を使用し、shell、alias、pager、credential helper、workspace由来コード、npm lifecycle script、外部通信を経由しない場合に限って、将来も個別に追加を検討します。
+
+承認要求では、次を短く確認できる粒度で示します。
+
+- **目的**: その操作で何を判断・達成するか
+- **変更対象**: どのファイル、プロセス、設定、外部先がどう変わるか
+- **通信**: 外部通信の有無と対象ホスト
+- **可逆性**: 失敗・中断時も含め、どう戻せるか、または復元不能か
+- **想定結果**: 成功時・失敗時に残る状態
+
+複数の読み取り専用操作は意図とコマンド群をまとめて提示できますが、変更、削除、権限変更、資格情報利用、外部送信のいずれかが含まれる場合は同じ承認にまとめず、個別に判断します。承認は単なる実行停止の仕組みではなく、人が影響を理解して結果を引き受けられることを確認する関門として扱います。
+
+`egress-allowlist.txt`は、HTTPSの接続先とポートを減らすネットワーク境界です。許可済みホストへの接続でもURL、query、header、request bodyにデータを含められるため、内容を安全にする仕組みではありません。AgentのWebアクセスはこのallowlistと同じ完全一致ドメインへsandbox側も限定し、URL単位の手動承認を維持します。特定ドメインを許可する主なリスクは、その通信先運営者へ送信内容が渡ることと、許可済みサービス上の公開APIを介して非公開workspace内容が外部へ出ることです。workspaceの資格情報を渡さず、外部送信値を承認画面で確認することで低減します。
 
 ### 制限と正当性
 
@@ -127,7 +162,7 @@ Agentによるテスト実行は、VS Codeの`secure: test`タスクを毎回手
 一度にすべて外すのではなく、目的ごとに必要最小限だけ緩めます。推奨順は次のとおりです。
 
 1. **許可ホストの追加（低リスク）**: 完全一致のホストを1つずつ確認し、`egress-allowlist.txt`へ追加します。ワイルドカードは使いません。
-2. **特定コマンドの自動承認（中リスク）**: 読み取り専用操作や決め打ちのテストだけを完全一致で承認し、任意シェルや破壊的操作は承認対象にしません。
+2. **特定コマンドの自動承認（中リスク）**: 信頼済み実行入口と完全一致の引数を持ち、workspace由来コードやlifecycle scriptを実行せず、shell、pager、helper、外部通信を経由しない読み取り専用操作だけに限定します。現行allowlistは`git status`とGit差分の書式確認の2件です。テスト、ビルド、任意シェル、破壊的操作は手動承認を維持します。
 3. **期限付き資格情報の提供（高リスク）**: 対象リポジトリと権限を絞った短命トークンだけにし、長期トークンやSSH秘密鍵を渡しません。
 4. **Docker socket・host network・privileged（重大リスク）**: コンテナからホスト管理権限を得られるため、この環境では原則禁止します。必要ならホスト側の明示的な操作か、別管理環境を使います。
 
@@ -313,7 +348,7 @@ node scripts/verify-shared-agent.mjs
 
 VS Codeをコンテナから開いていないWindowsでも、最低限のローカル隔離としてWSL 2とBubblewrapを使用します。`.vscode/settings.json`はWindowsの初期ターミナルを`Secure local sandbox`へ固定し、typecheck、test、buildタスクはnetwork namespaceを切ったoffline実行です。Agentの手動承認はVS Codeユーザー設定へ置くことを推奨します。
 
-`.vscode/settings.json`はWindowsローカル専用のterminal profileだけを管理します。Dev Container内のAgent承認・network・credentials設定は`.devcontainer/devcontainer.json`が管理します。Windowsローカルの全プロジェクト共通でAgent保護を効かせる場合は、VS Codeのユーザー設定へ手動承認・sandbox設定を統合します。推奨テンプレートはGit管理対象外の`tmp/vscode-user-settings-recommended.jsonc`です。ローカルランナーは省略時にofflineとなり、`--online`を明示したコマンドだけがWSLネットワークを共有します。
+`.vscode/settings.json`はWindowsローカル専用terminal profileに加え、Agent sandboxのnetwork・credentials境界も管理します。Dev Containerでは同じ方針を`.devcontainer/devcontainer.json`も管理します。Windowsローカルの全プロジェクト共通でAgent保護を効かせる場合は、VS Codeのユーザー設定へ同じ承認・sandbox設定を統合します。推奨テンプレートはGit管理対象外の`tmp/vscode-user-settings-recommended.jsonc`です。ローカルランナーは省略時にofflineとなり、`--online`を明示したコマンドだけがWSLネットワークを共有します。
 
 必要条件:
 
@@ -408,6 +443,9 @@ node scripts/verify-dns-security.mjs
 
 ## トラブルシューティング
 
+- 再起動直後に`failed to connect to the docker API`が表示される: Docker Desktopの`Start Docker Desktop when you sign in`を有効にし、`docker context use desktop-linux`でLinux Engineコンテキストを選びます。設定を確認するには`docker desktop status`と`docker info`を実行します。
+- `docker desktop start`を実行しても90秒以内にEngineへ接続できない: Docker Desktop、WSL 2、Windowsの仮想化、VPN、プロキシ、ファイアウォール、アンチウイルス、ディスク容量、Docker Desktopのリソース設定を確認します。解決後はDocker Desktopを再起動してから`Rebuild Container`を実行します。
+- コンテナーは作成されるが終了する: `docker ps -a`で状態を確認し、`docker logs`でdevcontainer、DNS filter、egress proxyのログを確認します。特に`/dev/net/tun`、DNS、iptables、メモリ上限、イメージのPullが失敗していないか確認します。
 - `Operation not permitted`がBubblewrapで発生する: ホストで非特権user namespaceが有効か、Dockerのseccompプロファイルが読み込まれているか確認します。
 - npmでネットワークエラーになる: egress proxyが起動中か、対象ホストがallowlistに完全一致するか確認します。
 - 許可していないサイトに接続できてしまう: devコンテナが`sandbox`以外のDockerネットワークへ接続されていないか`docker inspect`で確認します。

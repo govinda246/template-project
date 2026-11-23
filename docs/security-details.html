@@ -1132,14 +1132,20 @@
               <tr>
                 <td>反復作業を自動承認する</td>
                 <td>
-                  <code>chat.tools.terminal.autoApprove</code> は読み取り専用コマンドや
-                  テストなど、完全一致のコマンドだけに限定する。
-                  ワイルドカードや任意シェル実行を許可しない。
+                  <code>chat.tools.terminal.autoApprove</code> は、
+                  信頼済み実行入口と完全一致の引数を使う読み取り専用の状態確認だけに限定する。
+                  shell、alias、pager、helper、workspace由来コード、npm lifecycle script、
+                  外部通信を経由しないことまで確認し、コマンド名だけで安全と判断しない。
+                  テスト、build、ワイルドカード、任意シェル実行は手動承認を維持する。
+                  現行設定では <code>git --no-pager status --short</code> と
+                  external diff・textconvを無効にした差分の書式確認だけを自動許可する。
                 </td>
-                <td>確認回数を減らし、定型テストや差分確認を速くできる</td>
+                <td>確認回数を減らし、読み取り専用の状態確認を速くできる</td>
                 <td>
                   自動承認範囲が広すぎると、見せかけた同名操作やコマンド連結を通す可能性。
-                  破壊的操作は常に手動承認。
+                  テストやbuildもAgentが変更したworkspaceコードを実行するため手動承認とする。
+                  変更、削除、権限変更、資格情報利用、外部送信は個別に承認する。
+                  allowlistの追加・削除は設定検証テストでも差分不一致として検出する。
                 </td>
                 <td><span class="verdict conditional">限定的</span></td>
               </tr>
@@ -1191,6 +1197,20 @@
             </ul>
             <p>同時に緩めると、侵害時に被害がホストや外部サービスへ直結します。</p>
           </article>
+        </div>
+        <div class="callout" style="margin-top: 1rem">
+          <strong>承認の内容:</strong>
+          人が実行に責任を持てるよう、目的、変更対象、外部通信の有無、
+          失敗や中断を含む可逆性と復元方法、成功・失敗後に残る状態を短く示します。
+          複数の読み取り専用操作はまとめて提示できますが、変更を伴う操作とは分離します。
+        </div>
+        <div class="callout" style="margin-top: 1rem">
+          <strong>日常編集と外部通信:</strong>
+          <code>src/</code>、テスト、<code>public/</code>、<code>docs/</code>の編集は
+          Gitで差し戻せる日常作業として自動許可し、ガードレール、依存関係、秘密候補、
+          信頼スクリプトは手動承認します。Webアクセスはegressとsandboxの両方で
+          同じ完全一致ドメインへ限定し、URLごとの手動承認を維持します。
+          allowlistは通信先を絞るだけで、URLやrequest bodyの内容を無害化しません。
         </div>
         <div class="callout" style="margin-top: 1rem">
           <strong>緩和方針:</strong>
@@ -1455,7 +1475,9 @@
             <span class="tag blue">A. 初回または通常のゲーム起動</span>
             <h3>コンテナ再構築は不要</h3>
             <p>
-              Docker Desktopを起動し、VS Codeで「Reopen in Container」を実行します。
+              Docker DesktopとLinux Engineを起動し、WSL 2、Compose v2、
+              十分なメモリ・ディスク、<code>/dev/net/tun</code>が利用可能なことを確認してから、
+              VS Codeで「Reopen in Container」を実行します。
               コンテナが既に開いている場合、この段階は飛ばせます。
             </p>
             <div class="commands">

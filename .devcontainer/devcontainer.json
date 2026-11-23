@@ -21,7 +21,8 @@
         "GitHub.copilot-chat"
       ],
       "settings": {
-        // Agent操作は全て手動承認。端末・編集・URLへ暗黙に実行権限を与えない。
+        // 通常コード・テスト・公開資料の編集と、頻発するGit状態確認だけを自動許可する。
+        // ガードレール、依存関係、URL、状態変更コマンドは手動承認を維持する。
         "chat.defaultConfiguration": {
           "mode": "interactive",
           "approvals": "manual"
@@ -36,18 +37,41 @@
         },
         "chat.tools.global.autoApprove": false,
         "chat.tools.edits.autoApprove": {
-          "**/*": false
+          "src/**": true,
+          "test/**": true,
+          "tests/**": true,
+          "public/**": true,
+          "docs/**": true
         },
         "chat.tools.eligibleForAutoApproval": {
-          "runInTerminal": false,
+          "runInTerminal": true,
           "sendToTerminal": false
         },
-        "chat.tools.terminal.enableAutoApprove": false,
-        "chat.tools.terminal.autoApprove": {},
+        "chat.tools.terminal.enableAutoApprove": true,
+        "chat.tools.terminal.autoApprove": {
+          "git --no-pager status --short": true,
+          "git --no-pager diff --no-ext-diff --no-textconv --check": true
+        },
         "chat.tools.urls.autoApprove": {},
         "chat.agent.sandbox.enabled": "on",
-        // Agent自身には外部・LAN・資格情報・ホスト開発ツールを公開しない。
-        "chat.agent.sandbox.network.allowNetwork": false,
+        // Agentの外部通信は完全一致ドメインへ限定し、LAN・資格情報・ホスト開発ツールは公開しない。
+        "chat.agent.sandbox.network.allowNetwork": true,
+        "chat.agent.sandbox.network.allowedDomains": [
+          "registry.npmjs.org",
+          "github.com",
+          "api.github.com",
+          "objects.githubusercontent.com",
+          "codeload.github.com",
+          "raw.githubusercontent.com",
+          "marketplace.visualstudio.com",
+          "main.vscode-cdn.net",
+          "github.gallerycdn.vsassets.io",
+          "dbaeumer.gallerycdn.vsassets.io",
+          "esbenp.gallerycdn.vsassets.io",
+          "api.individual.githubcopilot.com",
+          "api.githubcopilot.com",
+          "copilot-proxy.githubusercontent.com"
+        ],
         "chat.agent.sandbox.network.allowLocalNetwork": false,
         "chat.agent.sandbox.fileSystem.allowDevToolAccess": false,
         "chat.agent.sandbox.credentials.authenticategit": false,

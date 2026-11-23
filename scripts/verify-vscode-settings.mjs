@@ -4,6 +4,31 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+const EDITS_ALLOWLIST = {
+  'src/**': true,
+  'test/**': true,
+  'tests/**': true,
+  'public/**': true,
+  'docs/**': true,
+};
+
+const NETWORK_ALLOWLIST = [
+  'registry.npmjs.org',
+  'github.com',
+  'api.github.com',
+  'objects.githubusercontent.com',
+  'codeload.github.com',
+  'raw.githubusercontent.com',
+  'marketplace.visualstudio.com',
+  'main.vscode-cdn.net',
+  'github.gallerycdn.vsassets.io',
+  'dbaeumer.gallerycdn.vsassets.io',
+  'esbenp.gallerycdn.vsassets.io',
+  'api.individual.githubcopilot.com',
+  'api.githubcopilot.com',
+  'copilot-proxy.githubusercontent.com',
+];
+
 function stripJsonComments(contents) {
   let result = '';
   let string = false;
@@ -79,11 +104,11 @@ export function verifyEffectiveSettings(devcontainer, workspace) {
     ['chat.defaultConfiguration.mode', 'interactive'],
     ['chat.defaultConfiguration.approvals', 'manual'],
     ['chat.tools.global.autoApprove', false],
-    ['chat.tools.eligibleForAutoApproval.runInTerminal', false],
+    ['chat.tools.eligibleForAutoApproval.runInTerminal', true],
     ['chat.tools.eligibleForAutoApproval.sendToTerminal', false],
-    ['chat.tools.terminal.enableAutoApprove', false],
+    ['chat.tools.terminal.enableAutoApprove', true],
     ['chat.agent.sandbox.enabled', 'on'],
-    ['chat.agent.sandbox.network.allowNetwork', false],
+    ['chat.agent.sandbox.network.allowNetwork', true],
     ['chat.agent.sandbox.network.allowLocalNetwork', false],
     ['chat.agent.sandbox.fileSystem.allowDevToolAccess', false],
     ['chat.agent.sandbox.credentials.authenticategit', false],
@@ -106,7 +131,11 @@ export function verifyEffectiveSettings(devcontainer, workspace) {
     );
   }
 
-  assert.deepEqual(effective['chat.tools.terminal.autoApprove'], {});
+  assert.deepEqual(effective['chat.tools.edits.autoApprove'], EDITS_ALLOWLIST);
+  assert.deepEqual(effective['chat.tools.terminal.autoApprove'], {
+    'git --no-pager status --short': true,
+    'git --no-pager diff --no-ext-diff --no-textconv --check': true,
+  });
   assert.deepEqual(effective['chat.tools.urls.autoApprove'], {});
   assert.deepEqual(
     effective['terminal.integrated.profiles.linux']['Secure shell'],
@@ -119,8 +148,10 @@ export function verifyEffectiveSettings(devcontainer, workspace) {
       ],
     },
   );
-  assert.equal(effective['chat.agent.sandbox.network.allowedDomains'], undefined);
-  assert.equal(effective['chat.agent.sandbox.network.allowNetwork'], false);
+  assert.deepEqual(
+    effective['chat.agent.sandbox.network.allowedDomains'],
+    NETWORK_ALLOWLIST,
+  );
   return effective;
 }
 
