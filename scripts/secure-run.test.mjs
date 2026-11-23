@@ -35,3 +35,29 @@ test('development server remains an explicit online exception', async () => {
   assert.equal(task.args[0], 'npm');
   assert.equal(task.args.includes('--offline'), false);
 });
+
+test('Dev Container trusts the workspace and only checks generated instructions', async () => {
+  const dockerfile = await readFile(
+    new URL('.devcontainer/Dockerfile', projectRoot),
+    'utf8',
+  );
+  const devcontainer = JSON.parse(
+    (await readFile(
+      new URL('.devcontainer/devcontainer.json', projectRoot),
+      'utf8',
+    )).replace(/^\s*\/\/.*$/gmu, ''),
+  );
+
+  assert.match(
+    dockerfile,
+    /git config --system --replace-all safe\.directory \/workspaces\/template-project/,
+  );
+  assert.match(
+    devcontainer.postCreateCommand,
+    /sync-shared-agent\.mjs --check/,
+  );
+  assert.doesNotMatch(
+    devcontainer.postCreateCommand,
+    /sync-shared-agent\.mjs(?!"? --check)/u,
+  );
+});

@@ -41,7 +41,7 @@ async function removeLegacyGeneratedFiles(root) {
   return removed;
 }
 
-export async function syncSharedAgent(root) {
+export async function renderSharedAgentInstructions(root) {
   const localInstructionsPath = path.join(root, LOCAL_INSTRUCTIONS);
   const localInstructions = await readFile(localInstructionsPath, 'utf8');
   const sharedRoot = path.join(root, SHARED_ROOT);
@@ -53,16 +53,43 @@ export async function syncSharedAgent(root) {
     sharedInstructions = await readFile(expectedInstructions, 'utf8');
   }
 
-  const combined = sharedInstructions
+  const contents = sharedInstructions
     ? `${localInstructions.trimEnd()}\n\n## Shared Agent instructions\n\n${sharedInstructions.trim()}\n`
     : `${localInstructions.trimEnd()}\n`;
-  await writeFile(path.join(root, GENERATED_INSTRUCTIONS), combined);
+
+  return {
+    contents,
+    sharedPresent: sharedInstructionsPresent,
+  };
+}
+
+export async function syncSharedAgent(root) {
+  const rendered = await renderSharedAgentInstructions(root);
+  await writeFile(path.join(root, GENERATED_INSTRUCTIONS), rendered.contents);
   const removed = await removeLegacyGeneratedFiles(root);
 
   return {
     instructions: GENERATED_INSTRUCTIONS,
     files: removed,
-    sharedPresent: sharedInstructionsPresent,
+    sharedPresent: rendered.sharedPresent,
+  };
+}
+
+export async function verifySharedAgentSync(root) {
+  const rendered = await renderSharedAgentInstructions(root);
+  const generatedPath = path.join(root, GENERATED_INSTRUCTIONS);
+  const generated = await readFile(generatedPath, 'utf8').catch((error) => {
+    if (error.code === 'ENOENT') {
+      throw new Error(`${GENERATED_INSTRUCTIONS} is missing; run the shared Agent sync.`);
+    }
+    throw error;
+  });
+  if (generated !== rendered.contents) {
+    throw new Error(`${GENERATED_INSTRUCTIONS} is stale; run the shared Agent sync.`);
+  }
+  return {
+    instructions: GENERATED_INSTRUCTIONS,
+    sharedPresent: rendered.sharedPresent,
   };
 }
 
@@ -71,11 +98,19 @@ function isMainModule() {
 }
 
 async function main() {
-  if (process.argv.length > 2) {
-    throw new Error('sync-shared-agent does not accept arguments.');
-  }
   const root = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
-  const result = await syncSharedAgent(root);
+  const args = process.argv.slice(2);
+  if (args.length > 1 || (args.length === 1 && args[0] !== '--check')) {
+    throw new Error('usage: node scripts/sync-shared-agent.mjs [--check]');
+  }
+  const check = args[0] === '--check';
+  const result = check
+    ? await verifySharedAgentSync(root)
+    : await syncSharedAgent(root);
+  if (check) {
+    console.log('Shared Agent instructions are synchronized.');
+    return;
+  }
   console.log(
     result.sharedPresent
       ? 'Synchronized shared Agent instructions.'

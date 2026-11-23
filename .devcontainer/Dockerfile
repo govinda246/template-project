@@ -43,6 +43,7 @@ RUN apt-get update \
         /usr/local/lib/node_modules/npm/node_modules/ \
     && rm -rf /tmp/npm-security-patches \
     && npm --version \
+    && git config --system --replace-all safe.directory /workspaces/template-project \
     && mkdir -p \
         /home/node/.copilot/session-state \
         /home/node/.vscode-server/data/agentSessionData \

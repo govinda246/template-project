@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const SUBMODULE_PATH = '.github/shared';
 const APPROVED_URL = 'https://github.com/govinda246/shared-agent.git';
-const APPROVED_COMMIT = 'ee774dc447eb24ce13f5ceabbf6c3cd21cce3b23';
+const APPROVED_COMMIT = '6ef1b03d811aaa99fbebc80fda3f8a191246e639';
 const REQUIRED_FILES = [
   'copilot-instructions.md',
   'hooks.yml',

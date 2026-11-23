@@ -320,7 +320,8 @@ npm run setup-shared-agent -- --url https://github.com/OWNER/shared-agent.git
 ブランチを明示して最初の参照点を選ぶ場合は`--branch`を追加します。
 Gitサブモジュールは`.github/shared`へ追加され、Gitが参照commitを固定します。
 共有リポジトリの指示は`.github/copilot-instructions.local.md`と結合されて
-`.github/copilot-instructions.md`へ生成します。同期処理はAgent定義やSkillを複製せず、
+`.github/copilot-instructions.md`へ生成します。Dev Container起動時は保護された
+`.github`を書き換えず、生成済みファイルが同期済みか`--check`で検証します。同期処理はAgent定義やSkillを複製せず、
 以前の`shared-*`生成物があれば削除します。Agent定義とSkillは
 `.vscode/settings.json`から`.github/agents`、`.github/shared/agents`、
 `.github/shared/skills`を直接検索対象にします。

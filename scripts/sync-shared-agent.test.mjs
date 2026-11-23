@@ -3,7 +3,10 @@ import { mkdtemp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
-import { syncSharedAgent } from './sync-shared-agent.mjs';
+import {
+  syncSharedAgent,
+  verifySharedAgentSync,
+} from './sync-shared-agent.mjs';
 
 test('merges local and shared instructions without copying Agents or Skills', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'shared-agent-test-'));
@@ -85,4 +88,22 @@ test('removes legacy generated shared Agent and Skill files', async () => {
     await readFile(path.join(root, '.github/agents/local.agent.md'), 'utf8'),
     'local',
   );
+});
+
+test('checks generated instructions without modifying the protected directory', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'shared-agent-test-'));
+  await mkdir(path.join(root, '.github/shared'), { recursive: true });
+  await writeFile(path.join(root, '.github/copilot-instructions.local.md'), 'Local\n');
+  await writeFile(
+    path.join(root, '.github/shared/copilot-instructions.md'),
+    'Shared\n',
+  );
+  await syncSharedAgent(root);
+
+  await assert.doesNotReject(verifySharedAgentSync(root));
+  await writeFile(
+    path.join(root, '.github/copilot-instructions.md'),
+    'stale\n',
+  );
+  await assert.rejects(verifySharedAgentSync(root), /is stale/);
 });
