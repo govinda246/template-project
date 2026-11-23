@@ -7,6 +7,9 @@
   "workspaceFolder": "/workspaces/template-project",
   "remoteUser": "node",
   "shutdownAction": "stopCompose",
+  "initializeCommand": {
+    "windows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .devcontainer/initialize-docker.ps1"
+  },
   "postCreateCommand": "git config --global --replace-all safe.directory /workspaces/template-project && node scripts/verify-shared-agent.mjs --pre-checkout && git submodule update --init --recursive && node scripts/verify-shared-agent.mjs && node scripts/sync-shared-agent.mjs",
   "forwardPorts": ["egress-proxy:3000"],
   "customizations": {
