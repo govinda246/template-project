@@ -392,9 +392,11 @@
               <li>コンテナ内ターミナルで下記を実行</li>
             </ol>
             <p>
-              WindowsではDocker Desktopの自動起動を有効にするか、再起動後に
-              <code>docker desktop start</code>を実行し、<code>docker info</code>が成功してから
-              コンテナーを開くと安定します。ホストにはWSL 2、十分なメモリ・ディスク、
+              WindowsではDev Containersの最初のDocker確認時に
+              <code>.devcontainer/docker-host.cmd</code>がDocker Desktopの起動とEngineの
+              応答待ちを最大180秒行うため、再起動直後でもコンテナーを開けます。
+              Docker Desktopのサインイン時自動起動も併用すると安定します。ホストにはWSL
+              2、十分なメモリ・ディスク、
               <code>/dev/net/tun</code>、Compose v2が必要です。
             </p>
             <div class="commands">

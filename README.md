@@ -23,10 +23,14 @@ docker compose version
 
 Dockerデーモンが稼働していない場合はDev Containerを再ビルドできません。
 
-Windowsでは、コンテナー作成直前に[initialize-docker.ps1](.devcontainer/initialize-docker.ps1)が
-実行されます。Docker Desktopが停止している場合は起動し、Engineが応答するまで最大90秒待機します。
+Windowsでは、Dev Containersの最初のDocker確認時に[docker-host.cmd](.devcontainer/docker-host.cmd)が
+[initialize-docker.ps1](.devcontainer/initialize-docker.ps1)を呼び出します。これにより
+`initializeCommand`より前に行われるEngine確認でも、Docker Desktopの起動後にEngineが応答するまで
+最大180秒待機します。
 再起動直後にコンテナーを開く場合は、Docker Desktopの設定で`Start Docker Desktop when you sign in`
 を有効にすることを推奨します。Docker Desktopの設定ファイルでは`AutoStart: true`です。
+CLI起動に失敗した場合も、同じ初期化処理がDocker Desktop.exeを直接起動してEngineの応答待ちを
+継続します。
 
 次の場合はコンテナーが起動できないか、起動後にツールが利用できなくなります。
 
@@ -445,7 +449,7 @@ node scripts/verify-dns-security.mjs
 ## トラブルシューティング
 
 - 再起動直後に`failed to connect to the docker API`が表示される: Docker Desktopの`Start Docker Desktop when you sign in`を有効にし、`docker context use desktop-linux`でLinux Engineコンテキストを選びます。設定を確認するには`docker desktop status`と`docker info`を実行します。
-- `docker desktop start`を実行しても90秒以内にEngineへ接続できない: Docker Desktop、WSL 2、Windowsの仮想化、VPN、プロキシ、ファイアウォール、アンチウイルス、ディスク容量、Docker Desktopのリソース設定を確認します。解決後はDocker Desktopを再起動してから`Rebuild Container`を実行します。
+- 直接起動を試しても180秒以内にEngineへ接続できない: Docker Desktop、WSL 2、Windowsの仮想化、VPN、プロキシ、ファイアウォール、アンチウイルス、ディスク容量、Docker Desktopのリソース設定を確認します。解決後はDocker Desktopを再起動してから`Rebuild Container`を実行します。
 - コンテナーは作成されるが終了する: `docker ps -a`で状態を確認し、`docker logs`でdevcontainer、DNS filter、egress proxyのログを確認します。特に`/dev/net/tun`、DNS、iptables、メモリ上限、イメージのPullが失敗していないか確認します。
 - `Operation not permitted`がBubblewrapで発生する: ホストで非特権user namespaceが有効か、Dockerのseccompプロファイルが読み込まれているか確認します。
 - npmでネットワークエラーになる: egress proxyが起動中か、対象ホストがallowlistに完全一致するか確認します。

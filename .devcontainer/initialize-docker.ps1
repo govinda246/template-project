@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Continue'
 
-$timeoutSeconds = 90
+$timeoutSeconds = 180
 $deadline = (Get-Date).AddSeconds($timeoutSeconds)
 
 function Test-DockerEngine {
@@ -11,7 +11,12 @@ function Test-DockerEngine {
 if (-not (Test-DockerEngine)) {
     & docker desktop start *> $null
     if ($LASTEXITCODE -ne 0) {
-        throw 'Failed to start Docker Desktop.'
+        $dockerDesktop = Join-Path $env:ProgramFiles 'Docker\Docker\Docker Desktop.exe'
+        if (-not (Test-Path -LiteralPath $dockerDesktop)) {
+            throw 'Failed to start Docker Desktop with the CLI, and Docker Desktop.exe was not found.'
+        }
+
+        Start-Process -FilePath $dockerDesktop -ErrorAction Stop
     }
 }
 

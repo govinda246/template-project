@@ -7,6 +7,7 @@
   "workspaceFolder": "/workspaces/template-project",
   "remoteUser": "node",
   "shutdownAction": "stopCompose",
+  "dockerPath": ".devcontainer/docker-host.cmd",
   "initializeCommand": {
     "windows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .devcontainer/initialize-docker.ps1"
   },
