@@ -12,7 +12,7 @@
 - workspace由来コードを実行するテスト・build、状態を変えるGit操作、依存関係導入、任意シェル、オンライン実行は固定形式でも手動承認を維持する。
 - `src/`、`test/`、`tests/`、`public/`、`docs/`のファイル編集は自動で進めてよい。`.git/`、`.devcontainer/`、`.github/`、`.vscode/`、`scripts/`、トップレベル設定・lockfile・秘密候補は編集前に承認を得る。
 - 自動許可を検討できるのは、信頼済み実行入口、完全一致の引数、shell・alias・pager・helper・workspaceコード・lifecycle script・外部通信を介さない、読み取り専用の状態確認だけに限る。コマンド名だけを自動許可の根拠にしない。
-- 自動許可済みのGit状態確認は `git --no-pager status --short` と `git --no-pager diff --no-ext-diff --no-textconv --check` の完全一致だけとする。
+- 自動許可済みのGit状態確認は `git --no-pager status --short` と `git --no-pager diff --no-ext-diff --no-textconv`、`git --no-pager diff --no-ext-diff --no-textconv --check` の完全一致だけとする。
 - 複数の読み取り専用操作は目的とコマンド群をまとめて提示してよい。変更・削除・権限変更・資格情報利用・外部送信を含む場合は同じ承認へまとめず、個別に判断させる。
 - 承認前に目的、変更対象、外部通信、可逆性と復元方法、成功・失敗・中断後に残る状態を短く提示する。承認は人が影響を理解して結果を引き受けられることを確認する関門として扱う。
 - 外部閲覧は可能な限り読み取り専用で行い、ファイル変更、コマンド実行、秘密情報へのアクセスと分離する。

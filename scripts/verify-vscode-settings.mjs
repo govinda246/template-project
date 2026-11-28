@@ -140,6 +140,7 @@ export function verifyEffectiveSettings(devcontainer, workspace) {
     effective['chat.tools.terminal.autoApprove'],
     {
       'git --no-pager status --short': true,
+      'git --no-pager diff --no-ext-diff --no-textconv': true,
       'git --no-pager diff --no-ext-diff --no-textconv --check': true,
     },
     'Effective VS Code setting chat.tools.terminal.autoApprove must match the allowlist.',

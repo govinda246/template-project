@@ -35,6 +35,7 @@
   "chat.tools.terminal.enableAutoApprove": true,
   "chat.tools.terminal.autoApprove": {
     "git --no-pager status --short": true,
+    "git --no-pager diff --no-ext-diff --no-textconv": true,
     "git --no-pager diff --no-ext-diff --no-textconv --check": true
   },
   "chat.tools.urls.autoApprove": {},

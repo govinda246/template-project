@@ -26,6 +26,7 @@ function remoteSettings() {
           'chat.tools.terminal.enableAutoApprove': true,
           'chat.tools.terminal.autoApprove': {
             'git --no-pager status --short': true,
+            'git --no-pager diff --no-ext-diff --no-textconv': true,
             'git --no-pager diff --no-ext-diff --no-textconv --check': true,
           },
           'chat.tools.urls.autoApprove': {},
@@ -118,5 +119,18 @@ test('rejects workspace overrides that weaken approval, network, or edit boundar
         ],
       }),
     /allowedDomains/,
+  );
+});
+
+test('rejects workspace overrides that omit diff content approval', () => {
+  assert.throws(
+    () =>
+      verifyEffectiveSettings(remoteSettings(), {
+        'chat.tools.terminal.autoApprove': {
+          'git --no-pager status --short': true,
+          'git --no-pager diff --no-ext-diff --no-textconv --check': true,
+        },
+      }),
+    /terminal\.autoApprove/,
   );
 });

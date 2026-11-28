@@ -131,7 +131,7 @@ Agentによるテスト実行は、VS Codeの`secure: test`タスクを毎回手
 
 通常の`src/`、`test/`、`tests/`、`public/`、`docs/`の編集は承認を挟まず、自動で差分確認できるようにします。これらはGitまたは開発履歴から比較・差し戻せることを前提とし、`.git/`、`.devcontainer/`、`.github/`、`.vscode/`、`scripts/`、トップレベル設定、lockfile、秘密候補は手動承認を維持します。
 
-自動承認できるのは、本当に副作用を持たない読み取り・状態確認に限ります。現在のDev ContainerとWindowsローカルworkspaceでは、`git --no-pager status --short`と、`--no-ext-diff --no-textconv`を付けた`git --no-pager diff ... --check`だけを完全一致で自動許可します。その他の`ls`、`cat`、ハッシュ確認もコマンド名だけでは許可せず、内蔵の読み取りツールまたは手動承認を使います。
+自動承認できるのは、本当に副作用を持たない読み取り・状態確認に限ります。現在のDev ContainerとWindowsローカルworkspaceでは、`git --no-pager status --short`と、`--no-ext-diff --no-textconv`を付けた`git --no-pager diff`（内容確認、`--check`付き書式確認）だけを完全一致で自動許可します。その他の`ls`、`cat`、ハッシュ確認もコマンド名だけでは許可せず、内蔵の読み取りツールまたは手動承認を使います。
 
 Gitの自動許可対象外では、信頼済みの絶対実行パス、完全一致の引数、同じsandbox境界を使用し、shell、alias、pager、credential helper、workspace由来コード、npm lifecycle script、外部通信を経由しない場合に限って、将来も個別に追加を検討します。
 
@@ -166,7 +166,7 @@ Gitの自動許可対象外では、信頼済みの絶対実行パス、完全�
 一度にすべて外すのではなく、目的ごとに必要最小限だけ緩めます。推奨順は次のとおりです。
 
 1. **許可ホストの追加（低リスク）**: 完全一致のホストを1つずつ確認し、`egress-allowlist.txt`へ追加します。ワイルドカードは使いません。
-2. **特定コマンドの自動承認（中リスク）**: 信頼済み実行入口と完全一致の引数を持ち、workspace由来コードやlifecycle scriptを実行せず、shell、pager、helper、外部通信を経由しない読み取り専用操作だけに限定します。現行allowlistは`git status`とGit差分の書式確認の2件です。テスト、ビルド、任意シェル、破壊的操作は手動承認を維持します。
+2. **特定コマンドの自動承認（中リスク）**: 信頼済み実行入口と完全一致の引数を持ち、workspace由来コードやlifecycle scriptを実行せず、shell、pager、helper、外部通信を経由しない読み取り専用操作だけに限定します。現行allowlistは`git status`、Git差分の内容確認、Git差分の書式確認の3件です。テスト、ビルド、任意シェル、破壊的操作は手動承認を維持します。
 3. **期限付き資格情報の提供（高リスク）**: 対象リポジトリと権限を絞った短命トークンだけにし、長期トークンやSSH秘密鍵を渡しません。
 4. **Docker socket・host network・privileged（重大リスク）**: コンテナからホスト管理権限を得られるため、この環境では原則禁止します。必要ならホスト側の明示的な操作か、別管理環境を使います。
 
